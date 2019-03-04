@@ -150,6 +150,7 @@ func handleClient(conn *net.TCPConn, sid string) {
 			return
 		}
 		req_obj ,err := protocolPacket.GetReqObj( _type,header,data )
+
 		if err != nil {
 			golog.Error("protocolPacket.GetReqObj err : "  + err.Error())
 			area.FreeConn(conn, last_sid)
@@ -176,7 +177,7 @@ func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 
 	task_obj := new(golang.TaskType).Init(conn, req_obj)
 	invoker_ret := worker.InvokeObjectMethod(task_obj, req_obj.Header.Cmd)
-	//fmt.Println("invoker_ret", invoker_ret)
+	fmt.Println("invoker_ret", invoker_ret)
 	// 判断是否需要响应数据
 	if req_obj.Type == protocol.TypeReq && !req_obj.Header.NoResp {
 		protocolPacket := new(protocol.Pack)

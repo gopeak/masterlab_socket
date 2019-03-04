@@ -9,7 +9,6 @@ import (
 	"masterlab_socket/connector"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
-	"masterlab_socket/hub"
 	"masterlab_socket/lib/syncmap"
 	_ "net/http/pprof"
 	"runtime"
@@ -45,11 +44,10 @@ func main() {
 	go connector.WebsocketConnector("", global.Config.Connector.WebsocketPort)
 
 	// 开启hub服务器
-	go hub.HubServer()
+	// go hub.HubServer()
 
 	// 预创建多个场景
 	go area.InitConfig()
-
 
 	// 启动worker
 	//go worker.InitWorkerServer()

@@ -26,8 +26,8 @@ func main() {
 	//fmt.Println( conn )
 	reader := bufio.NewReader(conn)
 
-	header := []byte( `{"cmd":"Auth","sid":"1234516","ver":"1.2","seq":12123,"token":"sssssssssss121"}`)
-	data := []byte(`{"user":"simarui","pass":123","data":"wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww122"}`)
+	header := []byte( `{"cmd":"Mail","sid":"1234516","ver":"1.2","seq":12123,"token":"sssssssssss121"}`)
+	data := []byte(`{"host":"smtpdm.aliyun.com","port":"465","user":"sender@smtp.masterlab.vip","password":"MasterLab123Pwd","from":"sender@smtp.masterlab.vip","to":"121642038@qq.com","subject":"Hello","body":"hello world"}`)
 	buf,err := protocol.EncodePacket( protocol.TypeReq , header, data)
 	if ( err != nil ) {
 		fmt.Println("protocol.EncodePacket error: ", err.Error())

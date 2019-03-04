@@ -1,0 +1,13 @@
+//  Hub相应给wroker的flatc协议
+namespace hub;
+
+
+table HubResp {
+	cmd:string;
+	err:string;
+	req_id:string;
+	data:string;
+
+}
+
+root_type HubResp;

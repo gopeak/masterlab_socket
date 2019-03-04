@@ -1,0 +1,58 @@
+####################
+# 配置文件   #
+####################
+# Ueligo initialization file, generally called config.ini, is responsible for
+# configuring many of the aspects of Ueligo behavior.
+
+	 
+    name 		=	"ueligo server"
+    enable 		= 	true 
+    status 		= 	"dev"
+    version		=	"1.0"
+    loglevel	=	"info"
+    single_mode	=	true
+	
+	[log]
+		log_level	=	"error"
+		log_behind_type = "mongodb"  
+		mongodb_host = "localhost"
+		mongodb_port = "27017"
+	
+	[admin]
+		http_port = "9090"
+	    
+    [connector]
+    	websocket_port 	= 9898
+    	socket_port    	= 9002
+    	max_conections 	= 5024
+    	max_packet_rate	= 100
+    	max_conntions_ip= 100
+      	max_packet_rate_unit = 10
+      	auth_cmds = ["Auth","Authorize"]
+      	
+    [object]
+    	data_type 	= "redis"  #  Mysql| redis | monogo  
+		redis_host 	= "127.0.0.1"
+		redis_port 	= "6379"
+		redis_password = ""
+		monogo_host = "localhost"
+		monogo_port = 27017 
+		mysql_host 	= "localhost"
+		mysql_port 	= 3306
+		mysql_password = ""
+
+	[worker]
+	    #  在分布式模式下 连接到worker servers的ip和端口
+        to_servers = [
+                ["127.0.0.1","8001" ,"go"],
+                ["127.0.0.1","8002" ,"go"] ,
+                ["127.0.0.1","8003" ,"go"] ]
+                #["192.168.3.254", "8002","php"]
+
+	[hub] 
+    	hub_host = "127.0.0.1" 
+    	hub_port = "7302" 
+ 
+	[area]
+		init_area = ["area-global", "area-global2", "area-global3"]
+		

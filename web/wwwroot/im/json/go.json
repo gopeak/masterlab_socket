@@ -1,0 +1,8 @@
+{
+  "type": "broatcast",
+  "header": {
+    "chanel_id": "channel_id_1",
+    "sid": "1850501660"
+  },
+  "data": "{\"area_id\":\"channel_id_1\",\"content\":\"dsfds\",\"from_info\":{\"avatar\":\"avatar/twenty-percent-cooler-octocat.png\",\"content\":\"dsfds\",\"id\":\"7\",\"mine\":false,\"username\":\"simarui2\"}}"
+}

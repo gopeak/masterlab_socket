@@ -1,0 +1,45 @@
+<html>
+ 
+ 
+    <input type="button" name="send" value="send" onclick="send()">
+ 
+    <body>
+        <script>
+var socket;
+var type = 0;
+ 
+ 
+function send()
+{
+    if (!type)
+    {
+        socket = new WebSocket('ws://127.0.0.1:9898');
+        type = 1;
+    }
+    else
+    {
+        socket.send('1||user.getUser||xxxxx||111||1');
+    }
+ 
+    socket.onopen = function(event) {
+        console.log('Client connected');
+        // ("%d||%s||%x||%d||%d",type_, cmd, sid, req_id, req_data )
+        socket.send('1||user.getUser||xxxxx||111||1');
+    }
+ 
+ 
+    socket.onmessage = function(event) {
+        console.log('Client received a message:', event.data);
+    };
+ 
+    // 监听Socket的关闭
+    socket.onclose = function(event) {
+        type = 0;
+        console.log('Client notified socket has closed',event);
+ 
+    };
+}
+ 
+    </script>
+    </body>
+</html>

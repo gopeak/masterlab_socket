@@ -5,15 +5,14 @@
 package main
 
 import (
-	_ "net/http/pprof"
-	"runtime"
 	"masterlab_socket/area"
 	"masterlab_socket/connector"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/hub"
-	"masterlab_socket/worker"
 	"masterlab_socket/lib/syncmap"
+	_ "net/http/pprof"
+	"runtime"
 )
 
 // 初始化全局变量
@@ -53,7 +52,7 @@ func main() {
 
 
 	// 启动worker
-	go worker.InitWorkerServer()
+	//go worker.InitWorkerServer()
 
 	// 监控
 	//go hub.TickWorkerServer()

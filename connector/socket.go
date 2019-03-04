@@ -52,48 +52,13 @@ func listenAcceptTCP(listen *net.TCPListener) {
 
 		// 校验ip地址
 		conn.SetKeepAlive(true)
-		var req_conn *net.TCPConn
-		if !global.SingleMode {
-			// 获取随机worker服务地址
-			configAddr := global.GetRandWorkerAddr()
-			tcpAddr, err := net.ResolveTCPAddr("tcp4", configAddr)
-			if err != nil {
-				golog.Error( "Socket listenAcceptTCP req_conn tcpAddr :", err.Error() )
-				return
-			}
-			req_conn, err = net.DialTCP("tcp", nil, tcpAddr)
-			defer req_conn.Close()
-			if err != nil {
-				golog.Error( "Socket listenAcceptTCP req_conn net.DialTCP :", err.Error())
-				return
-			}
-		}
-		go handleClient(conn, req_conn, area.CreateSid())
-		go handleWorkerResponse(conn, req_conn)
+
+		go handleClient(conn, area.CreateSid())
 		//go handleClientMsgSingle( conn ,CreateSid() )
 
 	} //end for {
-
 }
 
-func handleWorkerResponse(conn *net.TCPConn, to_worker_conn *net.TCPConn) {
-
-	if to_worker_conn==nil{
-		return
-	}
-	reader := bufio.NewReader(to_worker_conn)
-	for {
-		_,header_buf,data_buf,all_buf, err := protocol.DecodePacket( reader )
-		if err != nil {
-			golog.Error("Socket handleWorkerResponse protocol.DecodePacket err: ", err.Error())
-			to_worker_conn.Close()
-			break
-		}
-		responseProcess( conn, header_buf, data_buf )
-		//fmt.Println("handleWorkerResponse  data :", _type, string(header_buf), string(data_buf) )
-		conn.Write( all_buf )
-	}
-}
 
 func responseProcess( conn *net.TCPConn,  headerr_buf, data_buf []byte)  {
 
@@ -161,7 +126,7 @@ func handleClientMsgSingle(conn *net.TCPConn, sid string) {
 	}
 }
 
-func handleClient(conn *net.TCPConn, to_worker_conn *net.TCPConn, sid string) {
+func handleClient(conn *net.TCPConn, sid string) {
 
 	//声明一个管道用于接收解包的数据
 	reader := bufio.NewReader(conn)
@@ -191,7 +156,7 @@ func handleClient(conn *net.TCPConn, to_worker_conn *net.TCPConn, sid string) {
 			break
 		}
 		last_sid = req_obj.Header.Sid
-		ret, ret_err := dispatchMsg( req_obj, conn, to_worker_conn ,all_buf)
+		ret, ret_err := dispatchMsg( req_obj, conn ,all_buf)
 		if ret_err != nil {
 			if ret < 0 {
 				fmt.Println(ret_err.Error())
@@ -239,7 +204,7 @@ func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 /**
  * 根据消息类型分发处理
  */
-func dispatchMsg(req_obj *protocol.ReqRoot, conn *net.TCPConn, to_worker_conn *net.TCPConn, all_buf []byte) (int, error) {
+func dispatchMsg(req_obj *protocol.ReqRoot, conn *net.TCPConn,all_buf []byte) (int, error) {
 
 	var err error
 	//  认证检查,
@@ -249,15 +214,8 @@ func dispatchMsg(req_obj *protocol.ReqRoot, conn *net.TCPConn, to_worker_conn *n
 		return 0, err
 	}
 
-	if global.SingleMode {
-		directInvoker( conn ,req_obj )
-	}else{
-		if to_worker_conn != nil {
-			go to_worker_conn.Write( all_buf )
-		}else{
-			return 0, errors.New("req_conn is nil!")
-		}
-	}
+
+	directInvoker( conn ,req_obj )
 
 	return 1, nil
 }

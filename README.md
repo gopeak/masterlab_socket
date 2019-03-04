@@ -1,5 +1,5 @@
 
-# ueligo 实时通信服务器
+# Masterlab 实时通信服务器
 
 
 ##安装：
@@ -10,9 +10,8 @@
            govendor init 
            govendor add +external
            govendor sync 
-    4.在mysql中创建webim数据库并导入webim.sql  ,修改worker/golang/db.toml连接配置
     5.执行 go run manager.go
-    6. demo webim   http://localhost:9898/im
+
 
 
  

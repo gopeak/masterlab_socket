@@ -6,6 +6,7 @@ import (
 )
 
 // https://godoc.org/github.com/robfig/cron
+//https://www.cnblogs.com/zuxingyu/p/6023919.html
 func CronTest() {
 	c := cron.New()
 	c.AddFunc("0 30 * * * *", func() { fmt.Println("Every hour on the half hour") })

@@ -393,8 +393,6 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 		return
 
 	}
-
-
 }
 
 

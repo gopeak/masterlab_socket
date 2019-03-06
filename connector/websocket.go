@@ -16,8 +16,8 @@ import (
 	"masterlab_socket/golog"
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/protocol"
-	"masterlab_socket/worker/golang"
 	"masterlab_socket/worker"
+	"masterlab_socket/worker/golang"
 	"masterlab_socket/util"
 )
 
@@ -34,9 +34,9 @@ func WebsocketConnector(ip string, port int) {
 	fmt.Println("Http_dir:", http_dir)
 	http.Handle("/", http.FileServer(http.Dir(http_dir)))
 	// 初始化群组
-	//golang.InitGlobalGroup()
+	golang.InitGlobalGroup()
 	// http请求处理
-	// golang.InitHandler()
+	golang.InitHandler()
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
 

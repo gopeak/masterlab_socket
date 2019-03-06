@@ -47,7 +47,7 @@ func main() {
 	// go hub.HubServer()
 
 	// 预创建多个场景
-	go area.InitConfig()
+	//go area.InitConfig()
 
 	// 启动worker
 	//go worker.InitWorkerServer()

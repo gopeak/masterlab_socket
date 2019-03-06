@@ -2,6 +2,7 @@ package util
 
 import (
 	"bufio"
+	"io/ioutil"
 	"strconv"
 	"os"
 	"masterlab_socket/golog"
@@ -16,6 +17,15 @@ import (
 	"errors"
 )
 
+func ReadAll(filePth string) ([]byte, error) {
+	f, err := os.Open(filePth)
+	if err != nil {
+		return nil, err
+	}
+
+
+	return ioutil.ReadAll(f)
+}
 func saveFile(str string, n int) {
 	f, err := os.Create("./output" + strconv.Itoa(n) + ".txt") //创建文件
 

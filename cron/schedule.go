@@ -1,32 +1,33 @@
-package main
+package cron
 
 import (
 	"fmt"
 	"github.com/antonholmquist/jason"
-	"github.com/robfig/cron"
 	"log"
 	"masterlab_socket/util"
+	"github.com/robfig/cron"
 	"os/exec"
 )
 
 // https://godoc.org/github.com/robfig/cron
 //https://www.cnblogs.com/zuxingyu/p/6023919.html
-func main() {
-	c := cron.New()
+func Run() {
 
-	exampleJSON, err := util.ReadAll("C:/gopath/src/masterlab_socket/cron/cron.json")
+
+	cron_json, err := util.ReadAll("C:/gopath/src/masterlab_socket/cron/cron.json")
 	if err != nil {
 		fmt.Println(err.Error())
 		return
 	}
-	v, _ := jason.NewObjectFromBytes([]byte(exampleJSON))
+	json_object, _ := jason.NewObjectFromBytes([]byte(cron_json))
 
-	desc, _ := v.GetString("desc")
-	exe_bin, _ := v.GetString("exe_bin")
+	desc, _ := json_object.GetString("desc")
+	exe_bin, _ := json_object.GetString("exe_bin")
 	log.Println("desc:", desc)
 	log.Println("exe_bin:", exe_bin)
 
-	children, _ := v.GetObjectArray("schedule")
+	children, _ := json_object.GetObjectArray("schedule")
+	c := cron.New()
 	for i, element := range children {
 		log.Println(i, element)
 		exp, err:= element.GetString("exp")

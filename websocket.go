@@ -1,4 +1,4 @@
-package connector
+package masterlab_socket
 
 import (
 	"bufio"
@@ -17,7 +17,6 @@ import (
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/protocol"
 	"masterlab_socket/worker"
-	"masterlab_socket/worker/golang"
 	"masterlab_socket/util"
 )
 
@@ -34,9 +33,9 @@ func WebsocketConnector(ip string, port int) {
 	fmt.Println("Http_dir:", http_dir)
 	http.Handle("/", http.FileServer(http.Dir(http_dir)))
 	// 初始化群组
-	golang.InitGlobalGroup()
+	worker.InitGlobalGroup()
 	// http请求处理
-	golang.InitHandler()
+	worker.InitHandler()
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
 
@@ -143,7 +142,7 @@ func wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byt
 	fmt.Println("handleWorkerResponse resp_obj.Data: ", resp_header.Cmd )
 
 	if global.IsAuthCmd(resp_header.Cmd) {
-		var ret golang.ReturnType
+		var ret worker.ReturnType
 		data_buf = util.TrimX001( data_buf )
 		err := json.Unmarshal( data_buf ,&ret)
 		if err!=nil{
@@ -161,7 +160,7 @@ func wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byt
 
 func wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol.ReqRoot) interface{} {
 
-	task_obj := new(golang.TaskType).WsInit(wsconn, req_obj)
+	task_obj := new(worker.TaskType).WsInit(wsconn, req_obj)
 	invoker_ret := worker.InvokeObjectMethod(task_obj, req_obj.Header.Cmd)
 	//fmt.Println("invoker_ret", invoker_ret)
 	// 判断是否需要响应数据
@@ -174,8 +173,8 @@ func wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol.ReqRoot) interfa
 		wsconn.Write( buf )
 
 		if global.IsAuthCmd(req_obj.Header.Cmd) {
-			var return_obj golang.ReturnType
-			return_obj = invoker_ret.(golang.ReturnType)
+			var return_obj worker.ReturnType
+			return_obj = invoker_ret.(worker.ReturnType)
 			if return_obj.Ret == "ok" {
 				if wsconn != nil {
 					area.WsConnRegister(wsconn, return_obj.Sid)

@@ -2,13 +2,14 @@
 //  main
 //
 
-package main
+package masterlab_socket
 
 import (
 	"masterlab_socket/area"
-	"masterlab_socket/connector"
+	"masterlab_socket/cron"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
+	"masterlab_socket/hub"
 	"masterlab_socket/lib/syncmap"
 	_ "net/http/pprof"
 	"runtime"
@@ -36,24 +37,23 @@ func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
 
+	// 初始化配置和全局变量
 	global.InitConfig()
 	golog.InitLogger()
 	initGlobal()
 
-	go connector.SocketConnector("", global.Config.Connector.SocketPort)
-	go connector.WebsocketConnector("", global.Config.Connector.WebsocketPort)
+	// 前端的socket服务
+	go SocketConnector("", global.Config.Connector.SocketPort)
+	go WebsocketConnector("", global.Config.Connector.WebsocketPort)
 
 	// 开启hub服务器
-	// go hub.HubServer()
+	 go hub.HubServer()
 
 	// 预创建多个场景
-	//go area.InitConfig()
+	go area.InitConfig()
 
-	// 启动worker
-	//go worker.InitWorkerServer()
-
-	// 监控
-	//go hub.TickWorkerServer()
+	// 计划任务
+	go cron.Run()
 
 	golog.Info("Server started!")
 

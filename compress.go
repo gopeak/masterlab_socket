@@ -1,4 +1,4 @@
-package connector
+package masterlab_socket
 
 import(
 	"io"

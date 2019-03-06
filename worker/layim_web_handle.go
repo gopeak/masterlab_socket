@@ -1,4 +1,4 @@
-package golang
+package worker
 
 import (
 	_"database/sql"

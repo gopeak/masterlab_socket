@@ -1,21 +1,20 @@
-package connector
+package masterlab_socket
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"fmt"
-	"net"
-	"os"
-	"sync/atomic"
-	"time"
 	"masterlab_socket/area"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/protocol"
 	"masterlab_socket/util"
 	"masterlab_socket/worker"
-	"masterlab_socket/worker/golang"
-	"encoding/json"
+	"net"
+	"os"
+	"sync/atomic"
+	"time"
 )
 
 
@@ -73,7 +72,7 @@ func responseProcess( conn *net.TCPConn,  headerr_buf, data_buf []byte)  {
 
 	if global.IsAuthCmd(resp_header.Cmd) {
 
-		var ret golang.ReturnType
+		var ret worker.ReturnType
 		//data_buf = util.TrimX001( data_buf )
 		err := json.Unmarshal( data_buf ,&ret)
 		if err!=nil{
@@ -175,7 +174,7 @@ func handleClient(conn *net.TCPConn, sid string) {
 
 func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 
-	task_obj := new(golang.TaskType).Init(conn, req_obj)
+	task_obj := new(worker.TaskType).Init(conn, req_obj)
 	invoker_ret := worker.InvokeObjectMethod(task_obj, req_obj.Header.Cmd)
 	fmt.Println("invoker_ret", invoker_ret)
 	// 判断是否需要响应数据
@@ -188,8 +187,8 @@ func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 		conn.Write( buf )
 
 		if global.IsAuthCmd(req_obj.Header.Cmd) {
-			var return_obj golang.ReturnType
-			return_obj = invoker_ret.(golang.ReturnType)
+			var return_obj worker.ReturnType
+			return_obj = invoker_ret.(worker.ReturnType)
 			if return_obj.Ret == "ok" {
 				if conn != nil {
 					area.ConnRegister(conn, return_obj.Sid)

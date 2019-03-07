@@ -1,20 +1,27 @@
-package cron
+package masterlab_socket
 
 import (
+	"flag"
 	"fmt"
 	"github.com/antonholmquist/jason"
 	"log"
-	"masterlab_socket/util"
 	"github.com/robfig/cron"
 	"os/exec"
 )
 
+type Schedule struct {
+
+}
+
 // https://godoc.org/github.com/robfig/cron
 //https://www.cnblogs.com/zuxingyu/p/6023919.html
-func Run() {
+func (this *Schedule)Run() {
 
-
-	cron_json, err := util.ReadAll("C:/gopath/src/masterlab_socket/cron/cron.json")
+	// "C:/gopath/src/masterlab_socket/cron/cron.json"
+	var cron_file string
+	flag.StringVar(&cron_file,"c", "cron.json", "cron.json's file path")
+	fmt.Println( "cron_file:", cron_file )
+	cron_json, err := ReadAll(cron_file)
 	if err != nil {
 		fmt.Println(err.Error())
 		return
@@ -45,7 +52,7 @@ func Run() {
 		err = c.AddFunc(exp, func() {
 			sh := fmt.Sprintf("%s %s %s", exe_bin, file, arg)
 			log.Println(i, sh)
-			out := Cmd(sh, false)
+			out := this.Cmd(sh, false)
 			log.Println(string(out))
 		})
 		if err!=nil{
@@ -58,7 +65,7 @@ func Run() {
 	select {}
 }
 
-func Cmd(cmd string, shell bool) []byte {
+func (this *Schedule) Cmd(cmd string, shell bool) []byte {
 	if shell {
 		out, err := exec.Command("bash", "-c", cmd).Output()
 		if err != nil {

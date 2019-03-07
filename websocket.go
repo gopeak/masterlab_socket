@@ -2,22 +2,21 @@ package masterlab_socket
 
 import (
 	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"net"
-	"net/http"
-	"os"
-	"sync/atomic"
-	"encoding/json"
 	"masterlab_socket/area"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/protocol"
 	"masterlab_socket/worker"
-	"masterlab_socket/util"
+	"net"
+	"net/http"
+	"os"
+	"sync/atomic"
 )
 
 func WebsocketConnector(ip string, port int) {
@@ -63,10 +62,14 @@ func WebsocketHandleClient(wsconn *websocket.Conn) {
 	configAddr := global.GetRandWorkerAddr()
 	fmt.Println("ip_port:", configAddr)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", configAddr)
-	checkError(err)
+	if err != nil {
+		golog.Error(os.Stderr, "Connector error: %s", err.Error())
+	}
 	req_conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	//defer req_conn.Close()
-	checkError(err)
+	if err != nil {
+		golog.Error(os.Stderr, "Connector error: %s", err.Error())
+	}
 	go wsHandleWorkerResponse(wsconn, req_conn)
 	last_sid := ""
 	// 监听客户端发送的数据
@@ -143,7 +146,7 @@ func wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byt
 
 	if global.IsAuthCmd(resp_header.Cmd) {
 		var ret worker.ReturnType
-		data_buf = util.TrimX001( data_buf )
+		data_buf = TrimX001( data_buf )
 		err := json.Unmarshal( data_buf ,&ret)
 		if err!=nil{
 			fmt.Println("AuthCmd return json err: ", err.Error(), string(data_buf)  )
@@ -167,7 +170,7 @@ func wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol.ReqRoot) interfa
 	if req_obj.Type == protocol.TypeReq && !req_obj.Header.NoResp {
 		protocolJson := new(protocol.Json)
 		protocolJson.Init()
-		data_buf := util.Convert2Byte( invoker_ret )
+		data_buf := Convert2Byte( invoker_ret )
 		resp_obj:= protocolJson.WrapRespObj( req_obj ,data_buf, 200 )
 		buf,_ := json.Marshal(resp_obj)
 		wsconn.Write( buf )

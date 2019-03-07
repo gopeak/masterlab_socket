@@ -28,8 +28,8 @@ func (this *Json) GetReqObj(data []byte) (*ReqRoot, error) {
 	this.Data = data
 	stb := &ReqRoot{}
 	err := json.Unmarshal( data, stb )
- 	stb.Data = util.Convert2Byte( stb.WsData )
-	fmt.Println( "util.Convert2Byte( stb.WsData ):",string(stb.Data) )
+ 	stb.Data = main.Convert2Byte( stb.WsData )
+	fmt.Println( "main.Convert2Byte( stb.WsData ):",string(stb.Data) )
 	return stb, err
 
 
@@ -77,13 +77,13 @@ func (this *Json) WrapRespObj( req_obj *ReqRoot, invoker_ret []byte, status int 
 
 func (this *Json) WrapResp(   header []byte, data []byte, status int, msg string )  []byte  {
 
-	header = util.TrimX001( header )
+	header = main.TrimX001( header )
 	data_str := string(data)
-	if( util.TrimStr(data_str)==""){
+	if( main.TrimStr(data_str)==""){
 		data_str = `""`
 	}
 	header_str := string(header)
-	if( util.TrimStr(header_str)==""){
+	if( main.TrimStr(header_str)==""){
 		header_str = "{}"
 	}
 	return []byte(fmt.Sprintf(`{"type":"%s","status":%d,"msg":"%s","header":%s,"data":%s}`,
@@ -120,7 +120,7 @@ func (this *Json) WrapPushRespObj(to_sid string, from_sid string , data []byte )
 func (this *Json) WrapPushResp(to_sid string, from_sid string , data []byte ) []byte {
 
 	data_str := string(data)
-	if( util.TrimStr(data_str)==""){
+	if( main.TrimStr(data_str)==""){
 		data_str = `""`
 	}
 	return []byte(fmt.Sprintf(`{"header":{"sid":"%s"},"type":"%s","data":%s  }`,

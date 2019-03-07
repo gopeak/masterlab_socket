@@ -9,10 +9,8 @@ import (
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/protocol"
-	"masterlab_socket/util"
 	"masterlab_socket/worker"
 	"net"
-	"os"
 	"sync/atomic"
 	"time"
 )
@@ -73,7 +71,7 @@ func responseProcess( conn *net.TCPConn,  headerr_buf, data_buf []byte)  {
 	if global.IsAuthCmd(resp_header.Cmd) {
 
 		var ret worker.ReturnType
-		//data_buf = util.TrimX001( data_buf )
+		//data_buf = main.TrimX001( data_buf )
 		err := json.Unmarshal( data_buf ,&ret)
 		if err!=nil{
 			//fmt.Println("AuthCmd return json err: ", err.Error(),string(data_buf)  )
@@ -182,7 +180,7 @@ func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 		protocolPacket := new(protocol.Pack)
 		protocolPacket.Init()
 
-		data_buf := util.Convert2Byte( invoker_ret )
+		data_buf := Convert2Byte( invoker_ret )
 		buf,_ := protocolPacket.WrapResp( req_obj.Header.Cmd, req_obj.Header.Sid, req_obj.Header.SeqId , 200, data_buf )
 		conn.Write( buf )
 
@@ -221,13 +219,6 @@ func dispatchMsg(req_obj *protocol.ReqRoot, conn *net.TCPConn,all_buf []byte) (i
 }
 
 
-
-func checkError(err error) {
-	if err != nil {
-		golog.Error(os.Stderr, "Connector error: %s", err.Error())
-	}
-}
-
 func statTick() {
 
 	timer := time.Tick(1000 * time.Millisecond)
@@ -243,7 +234,7 @@ func userTick(conn *net.TCPConn) {
 	protocolPacket := new(protocol.Pack)
 	protocolPacket.Init()
 	for _ = range timer {
-		buf,_ := protocolPacket.WrapResp( "ping", "", 0 , 200, util.Int64ToBytes(time.Now().Unix()) )
+		buf,_ := protocolPacket.WrapResp( "ping", "", 0 , 200, Int64ToBytes(time.Now().Unix()) )
 		_,err := conn.Write( buf )
 		if err!=nil{
 			golog.Error( "Socket user_tick err:",err.Error() )

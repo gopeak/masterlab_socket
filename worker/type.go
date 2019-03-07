@@ -81,7 +81,7 @@ func Invoker(conn *net.TCPConn, req_obj *protocol.ReqRoot) interface{} {
 	if req_obj.Type == protocol.TypeReq && !req_obj.Header.NoResp {
 		protocolPack := new(protocol.Pack)
 		protocolPack.Init()
-		invoker_ret_buf := util.Convert2Byte( invoker_ret )
+		invoker_ret_buf := main.Convert2Byte( invoker_ret )
 		switch invoker_ret.(type) {
 		case ReturnType:
 			tmp :=  invoker_ret.(ReturnType)

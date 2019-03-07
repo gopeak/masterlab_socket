@@ -1,7 +1,7 @@
 ####################
 # 配置文件   #
 ####################
-# Ueligo initialization file, generally called config.ini, is responsible for
+# masterlab_socket initialization file, generally called config.ini, is responsible for
 # configuring many of the aspects of Ueligo behavior.
 
 	 
@@ -40,14 +40,6 @@
 		mysql_host 	= "localhost"
 		mysql_port 	= 3306
 		mysql_password = ""
-
-	[worker]
-	    #  在分布式模式下 连接到worker servers的ip和端口
-        to_servers = [
-                ["127.0.0.1","8001" ,"go"],
-                ["127.0.0.1","8002" ,"go"] ,
-                ["127.0.0.1","8003" ,"go"] ]
-                #["192.168.3.254", "8002","php"]
 
 	[hub] 
     	hub_host = "127.0.0.1" 

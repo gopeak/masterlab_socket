@@ -145,7 +145,7 @@ func (this *Pack) GetReqObj( _type uint32 ,header []byte, data []byte ) (*ReqRoo
 
 	var req_header ReqHeader
 	stb := &ReqRoot{}
-	header = util.TrimX001(header)
+	header = main.TrimX001(header)
 	stb.Type = fmt.Sprintf( "%d", _type )
 	err :=json.Unmarshal(header, &req_header)
 	if err!=nil {

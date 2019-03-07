@@ -6,7 +6,6 @@ package masterlab_socket
 
 import (
 	"masterlab_socket/area"
-	"masterlab_socket/cron"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/hub"
@@ -53,7 +52,8 @@ func main() {
 	go area.InitConfig()
 
 	// 计划任务
-	go cron.Run()
+	schedule := new(Schedule)
+	go schedule.Run()
 
 	golog.Info("Server started!")
 

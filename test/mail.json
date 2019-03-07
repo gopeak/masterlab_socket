@@ -1,1 +1,10 @@
-{"host":"smtpdm.aliyun.com","port":"25","user":"sender@smtp.masterlab.vip","password":"MasterLab123Pwd","from":"sender@smtp.masterlab.vip","to":"121642038@qq.com","subject":"Hello","body":"hello world"}
+{
+  "host": "smtpdm.aliyun.com",
+  "port": "25",
+  "user": "sender@smtp.masterlab.vip",
+  "password": "MasterLab123Pwd",
+  "from": "sender@smtp.masterlab.vip",
+  "to": "121642038@qq.com",
+  "subject": "Hello",
+  "body": "hello world"
+}

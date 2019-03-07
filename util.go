@@ -1,21 +1,27 @@
-package util
+package masterlab_socket
 
 import (
 	"bufio"
-	"io/ioutil"
-	"strconv"
-	"os"
-	"masterlab_socket/golog"
-	"strings"
 	"crypto/rand"
-	"math/big"
-	"math"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
-	"regexp"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"masterlab_socket/golog"
+	"math"
+	"math/big"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
+
+
+type Util struct {
+
+
+}
 
 func ReadAll(filePth string) ([]byte, error) {
 	f, err := os.Open(filePth)

@@ -178,7 +178,7 @@ func (sdk *Sdk) ReqHubAsync( req_cmd string , data []byte ,handler AfterWorkCall
 		golog.Error( "ReqHubAsync protocol.HubPack err:" , err.Error() )
 		return err.Error(),false
 	}
-	index := util.RandInt64(0, int64(len(ReqHubConns)))
+	index := main.RandInt64(0, int64(len(ReqHubConns)))
 	req_hub_conn  := ReqHubConns[index]
 
 	if( req_hub_conn==nil  ){

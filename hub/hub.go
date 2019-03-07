@@ -9,14 +9,14 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strconv"
+	"time"
+	"encoding/json"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"github.com/antonholmquist/jason"
 	"masterlab_socket/protocol"
-	"strconv"
-	"time"
-	"encoding/json"
-	"masterlab_socket/util"
+	main "masterlab_socket"
 )
 
 /**
@@ -70,7 +70,7 @@ func handleHubConn(conn *net.TCPConn) {
 			conn.Close()
 			return
 		}
-		if  util.TrimStr(string(cmd_buf))==""{
+		if  main.TrimStr(string(cmd_buf))==""{
 			//fmt.Println( "handleHubConn cmd empty" )
 			golog.Error( "handleHubConn protocol.HubUnPack err: ","handleHubConn cmd empty"  )
 			conn.Close()
@@ -237,7 +237,7 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 
 	if cmd == "AreaAddSid" {
 		fmt.Println("AreaKickSid", data )
-		data_buf = util.TrimX001( data_buf )
+		data_buf = main.TrimX001( data_buf )
 		var map_data map[string]string
 		err_json := json.Unmarshal( data_buf ,&map_data )
 		//data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
@@ -266,7 +266,7 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	}
 	if cmd == "AreaKickSid" {
 
-		data_buf = util.TrimX001( data_buf )
+		data_buf = main.TrimX001( data_buf )
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
 			golog.Error("Hub AreaKickSid json err:",err_json.Error())

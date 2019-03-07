@@ -18,7 +18,7 @@ import (
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/lib/syncmap"
 	"masterlab_socket/protocol"
-	"masterlab_socket/util"
+	main "masterlab_socket"
 )
 
 // 所有的场景名称列表
@@ -57,9 +57,8 @@ type AreaType struct {
 	Conns *syncmap.SyncMap
 	// 当前场景包含的websocket连接对象
 	WsConns *syncmap.SyncMap
-
+	// 创建时间
 	CreateTime int64
-
 }
 
 
@@ -87,10 +86,10 @@ func Gets(  ) map[string]string{
 
 	var areas_map map[string]string
 	areas_map = make(map[string]string)  //字典的创建
-	var area *AreaType
+	var area_obj *AreaType
 	for item := range AreasMap.IterItems(){
-		area = item.Value.((*AreaType))
-		areas_map[item.Key] = area.Name
+		area_obj = item.Value.((*AreaType))
+		areas_map[item.Key] = area_obj.Name
 	}
 	fmt.Println( "area Gets:", areas_map )
 	return areas_map
@@ -100,13 +99,13 @@ func Gets(  ) map[string]string{
 func Create(area_id string, name string) {
 
 	Areas = append(Areas, area_id)
-	area := new(AreaType)
-	area.Id = area_id
-	area.Name = name
-	area.WsConns = syncmap.New()
-	area.Conns = syncmap.New()
-	area.CreateTime = time.Now().Unix()
-	AreasMap.Set( area_id,area)
+	area_obj := new(AreaType)
+	area_obj.Id = area_id
+	area_obj.Name = name
+	area_obj.WsConns = syncmap.New()
+	area_obj.Conns = syncmap.New()
+	area_obj.CreateTime = time.Now().Unix()
+	AreasMap.Set( area_id,area_obj)
 }
 
 // 创建一个场景
@@ -138,8 +137,8 @@ func CheckExist(area_id string) bool {
 
 func AddSid(sid string, area_id string) bool {
 
-	area_id = util.TrimStr( area_id )
-	sid = util.TrimStr( sid )
+	area_id = main.TrimStr( area_id )
+	sid = main.TrimStr( sid )
 	exist := CheckExist(area_id)
 	//fmt.Println( area_id," CheckChannelExist:", exist )
 	if !exist {

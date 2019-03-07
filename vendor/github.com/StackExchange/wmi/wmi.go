@@ -138,7 +138,7 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 		defer ole.CoUninitialize()
 	}
 
-	unknown, err := oleutil.CreateObject("WbemScripting.SWbemLocator")
+	unknown, err := olemain.CreateObject("WbemScripting.SWbemLocator")
 	if err != nil {
 		return err
 	}
@@ -151,7 +151,7 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 	defer wmi.Release()
 
 	// service is a SWbemServices
-	serviceRaw, err := oleutil.CallMethod(wmi, "ConnectServer", connectServerArgs...)
+	serviceRaw, err := olemain.CallMethod(wmi, "ConnectServer", connectServerArgs...)
 	if err != nil {
 		return err
 	}
@@ -159,7 +159,7 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 	defer serviceRaw.Clear()
 
 	// result is a SWBemObjectSet
-	resultRaw, err := oleutil.CallMethod(service, "ExecQuery", query)
+	resultRaw, err := olemain.CallMethod(service, "ExecQuery", query)
 	if err != nil {
 		return err
 	}
@@ -178,7 +178,7 @@ func (c *Client) Query(query string, dst interface{}, connectServerArgs ...inter
 	for i := int64(0); i < count; i++ {
 		err := func() error {
 			// item is a SWbemObject, but really a Win32_Process
-			itemRaw, err := oleutil.CallMethod(result, "ItemIndex", i)
+			itemRaw, err := olemain.CallMethod(result, "ItemIndex", i)
 			if err != nil {
 				return err
 			}
@@ -246,7 +246,7 @@ func (c *Client) loadEntity(dst interface{}, src *ole.IDispatch) (errFieldMismat
 				Reason:     "CanSet() is false",
 			}
 		}
-		prop, err := oleutil.GetProperty(src, n)
+		prop, err := olemain.GetProperty(src, n)
 		if err != nil {
 			if !c.AllowMissingFields {
 				errFieldMismatch = &ErrFieldMismatch{
@@ -380,7 +380,7 @@ func checkMultiArg(v reflect.Value) (m multiArgType, elemType reflect.Type) {
 }
 
 func oleInt64(item *ole.IDispatch, prop string) (int64, error) {
-	v, err := oleutil.GetProperty(item, prop)
+	v, err := olemain.GetProperty(item, prop)
 	if err != nil {
 		return 0, err
 	}

@@ -5,9 +5,7 @@ import (
 	"fmt"
 	"masterlab_socket/protocol"
 	"masterlab_socket/lib/websocket"
-	"masterlab_socket/golog"
-	"masterlab_socket/area"
-	"masterlab_socket/util"
+	main "masterlab_socket"
 	"masterlab_socket/global"
 	"net"
 	"reflect"
@@ -92,7 +90,7 @@ func Invoker(conn *net.TCPConn, req_obj *protocol.ReqRoot) interface{} {
 	}
 	if global.SingleMode {
 		if global.IsAuthCmd(req_obj.Header.Cmd) {
-			area.ConnRegister(conn, req_obj.Header.Sid)
+			main.AreaConnRegister(conn, req_obj.Header.Sid)
 		}
 	}
 	return invoker_ret
@@ -106,7 +104,7 @@ func InvokeObjectMethod(object interface{}, methodName string ) interface{} {
 	empty:=reflect.Value{}
 	if fnc==empty{
 		fmt.Println( " reflect MethodByName " ,methodName ," no found!" )
-		//golog.Error( " reflect MethodByName " ,methodName ," no found!" )
+		//main.LogError( " reflect MethodByName " ,methodName ," no found!" )
 		return ""
 	}
 	ret := fnc.Call( inputs )[0]
@@ -154,7 +152,7 @@ func InvokeObjectMethod(object interface{}, methodName string ) interface{} {
 		return ret.Interface().(ReturnType)
 	default:
 		fmt.Println("vtype:", vtype)
-		golog.Error( "返回的类型无法处理:",vtype)
+		main.LogError( "返回的类型无法处理:",vtype)
 	}
 	return ""
 

@@ -11,7 +11,7 @@ import (
 	"time"
 	"github.com/go-sql-driver/mysql"
 	"masterlab_socket/lib"
-	"masterlab_socket/area"
+	main "masterlab_socket"
 
 )
 
@@ -58,7 +58,7 @@ func InitGlobalGroup(){
 			fmt.Println(505, "服务器错误@" + err.Error())
 			return
 		}
-		area.Create( channel_id,title )
+		main.AreaCreate( channel_id,title )
 	}
 }
 
@@ -168,7 +168,7 @@ func RegHandler(w http.ResponseWriter, r *http.Request) {
 		sign := r.PostForm.Get(`sign`)
 		avatar := r.PostForm.Get(`avatar`)
 		reg_time := time.Now().Unix()
-		sid := area.CreateSid()
+		sid := main.AreaCreateSid()
 
 		db := new(lib.Mysql)
 		db.Connect()
@@ -237,7 +237,7 @@ func LoginHandler(w http.ResponseWriter, r *http.Request) {
 		record["sign"] = sign
 		record["sid"] = sid
 		record["avatar"] = avatar
-		token := area.CreateSid()
+		token := main.AreaCreateSid()
 		affect_num,_:=db.Update( `Update user set token=? Where id=?`,token,id)
 		if affect_num>0 {
 			record["token"] = token

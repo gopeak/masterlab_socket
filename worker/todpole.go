@@ -2,13 +2,10 @@ package worker
 
 import (
 	"github.com/antonholmquist/jason"
-	"masterlab_socket/golog"
+	main "masterlab_socket"
 	"fmt" 
 	"strconv"
 )
-
-
-
 
 func (this TaskType)Message(   ) string {
 
@@ -16,7 +13,7 @@ func (this TaskType)Message(   ) string {
 
 	data_json ,err_json:= jason.NewObjectFromBytes( this.Data )
 	if( err_json!=nil ) {
-		golog.Error("todpole message json err:",err_json.Error())
+		main.LogError("todpole message json err:",err_json.Error())
 		return ""
 	}
 
@@ -24,7 +21,7 @@ func (this TaskType)Message(   ) string {
 	_,err2 := data_json.GetString("message")
 	sid,err3 := data_json.GetString("id")
 	if( err1!=nil || err2!=nil || err3!=nil ){
-		//golog.Error("todpole message json err:",err1.Error()+err2.Error()+err3.Error())
+		//main.LogError("todpole message json err:",err1.Error()+err2.Error()+err3.Error())
 		return ""
 	}
 	//broatcast_msg := fmt.Sprintf(`{"type":"message","message":"%s","id":"%s" }`,message,sid)
@@ -41,7 +38,7 @@ func (this TaskType)Update(   ) string {
 
 	data_json ,err_json:= jason.NewObjectFromBytes( this.Data )
 	if( err_json!=nil ) {
-		golog.Error("todpole message json err:",err_json.Error())
+		main.LogError("todpole message json err:",err_json.Error())
 		return ""
 	}
 
@@ -66,8 +63,6 @@ func (this TaskType)Update(   ) string {
 	return ""
 	json_ret := fmt.Sprintf(`{"type":"%s","id":"%s" }`,"none",_id)
 	return json_ret;
-
-
 }
 
 

@@ -3,8 +3,7 @@
  *  创建多个channel,一个channel对应一个publisher,chanel从Hub订阅消息后分发给客户端
  *
  */
-
-package area
+package main
 
 import (
 	"fmt"
@@ -14,28 +13,10 @@ import (
 	"encoding/json"
 	"math/rand"
 	"masterlab_socket/global"
-	"masterlab_socket/golog"
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/lib/syncmap"
 	"masterlab_socket/protocol"
-	main "masterlab_socket"
 )
-
-// 所有的场景名称列表
-var Areas = make([]string, 0, 1000)
-
-// 场景集合
-var AreasMap *syncmap.SyncMap
-
-// 一个全局的场景
-var GlobalArea   *AreaType
-
-// 所有的用户连接对象
-var AllConns *syncmap.SyncMap
-var AllWsConns *syncmap.SyncMap
-
-// 用户加入过的场景列表
-var UserJoinedAreas *syncmap.SyncMap
 
 // 用户结构
 type Session struct {
@@ -47,6 +28,11 @@ type Session struct {
 	ConnectTime int64
 	PacketTime  int64
 }
+
+type AreaManager struct {
+
+}
+
 
 type AreaType struct {
 	// 唯一标识符
@@ -63,14 +49,14 @@ type AreaType struct {
 
 
 // 预创建多个场景
-func InitConfig() {
+func AreaInitConfig() {
 
 	AreasMap   = syncmap.New()
 	AllConns   = syncmap.New()
 	AllWsConns = syncmap.New()
 
 	for _, area_id := range global.Config.Area.Init_area {
-		Create(area_id, area_id)
+		AreaCreate(area_id, area_id)
 	}
 	GlobalArea = new(AreaType)
 	GlobalArea.Id = "global"
@@ -82,7 +68,7 @@ func InitConfig() {
 }
 
 // 获取场景列表
-func Gets(  ) map[string]string{
+func AreaGets(  ) map[string]string{
 
 	var areas_map map[string]string
 	areas_map = make(map[string]string)  //字典的创建
@@ -91,12 +77,12 @@ func Gets(  ) map[string]string{
 		area_obj = item.Value.((*AreaType))
 		areas_map[item.Key] = area_obj.Name
 	}
-	fmt.Println( "area Gets:", areas_map )
+	fmt.Println( "area AreaGets:", areas_map )
 	return areas_map
 }
 
 // 创建一个场景
-func Create(area_id string, name string) {
+func AreaCreate(area_id string, name string) {
 
 	Areas = append(Areas, area_id)
 	area_obj := new(AreaType)
@@ -108,8 +94,8 @@ func Create(area_id string, name string) {
 	AreasMap.Set( area_id,area_obj)
 }
 
-// 创建一个场景
-func Get( area_id string ) *AreaType{
+// 获取一个场景
+func AreaGet( area_id string ) *AreaType{
 
 	v,ok := AreasMap.Get(area_id)
 	if ok {
@@ -118,7 +104,7 @@ func Get( area_id string ) *AreaType{
 	return nil
 }
 // 删除一个场景
-func Remove(id string) {
+func AreaRemove(id string) {
 	// 1.删除名称
 	for index, elem := range Areas {
 		if elem==id {
@@ -131,29 +117,29 @@ func Remove(id string) {
 }
 
 // 检查是否已经创建了场景
-func CheckExist(area_id string) bool {
+func AreaCheckExist(area_id string) bool {
 	return AreasMap.Has(area_id)
 }
 
-func AddSid(sid string, area_id string) bool {
+func AreaAddSid(sid string, area_id string) bool {
 
-	area_id = main.TrimStr( area_id )
-	sid = main.TrimStr( sid )
-	exist := CheckExist(area_id)
+	area_id = TrimStr( area_id )
+	sid = TrimStr( sid )
+	exist := AreaCheckExist(area_id)
 	//fmt.Println( area_id," CheckChannelExist:", exist )
 	if !exist {
 		return false
 	}
-	user_conn := GetConn( sid )
-	user_wsconn :=  GetWsConn( sid )
+	user_conn := AreaGetConn( sid )
+	user_wsconn :=  AreaGetWsConn( sid )
 	fmt.Println( "AreaAddSid user_conn:",sid, user_conn )
 	// 会话如果属于socket
 	if user_conn != nil {
-		Subscribe(area_id, user_conn, sid)
+		AreaSubscribe(area_id, user_conn, sid)
 	}
 	// 会话如果属于websocket
 	if user_wsconn != nil {
-		WsSubscribe( area_id, user_wsconn, sid )
+		AreaWsSubscribe( area_id, user_wsconn, sid )
 	}
 	// 该用户加入过的场景列表
 	var userJoinedChannels = make([]string, 0, 1000)
@@ -171,52 +157,52 @@ func AddSid(sid string, area_id string) bool {
 /**
  *  socket连接 加入到场景中
  */
-func Subscribe(area_id string, conn *net.TCPConn, sid string) {
+func AreaSubscribe(area_id string, conn *net.TCPConn, sid string) {
 
-	area := Get( area_id )
-	if( area==nil  ) {
-		golog.Error( "Area  ",area_id," no exist! "  )
+	area_obj := AreaGet( area_id )
+	if( area_obj ==nil  ) {
+		LogError( "Area  ",area_id," no exist! "  )
 		return
 	}else{
-		if( area.Conns.Size()<=0 ){
-			area.Conns = syncmap.New()
+		if( area_obj.Conns.Size()<=0 ){
+			area_obj.Conns = syncmap.New()
 		}
-		if  !area.Conns.Has(sid) {
-			area.Conns.Set(sid, conn)
+		if  !area_obj.Conns.Has(sid) {
+			area_obj.Conns.Set(sid, conn)
 		}
-		AreasMap.Set( area_id,area )
+		AreasMap.Set( area_id, area_obj)
 	}
 }
 
 /**
  *  websocket连接 加入到场景中
  */
-func WsSubscribe(area_id string, ws *websocket.Conn, sid string) {
+func AreaWsSubscribe(area_id string, ws *websocket.Conn, sid string) {
 
-	area := Get( area_id )
-	if( area==nil ) {
-		golog.Error( "Area  ",area_id," no exist! "  )
+	area_obj := AreaGet( area_id )
+	if( area_obj ==nil ) {
+		LogError( "Area  ",area_id," no exist! "  )
 		return
 	}else{
-		if( area.WsConns.Size()<=0 ){
-			area.WsConns = syncmap.New()
+		if( area_obj.WsConns.Size()<=0 ){
+			area_obj.WsConns = syncmap.New()
 		}
-		if  !area.WsConns.Has(sid) {
-			area.WsConns.Set(sid, ws)
+		if  !area_obj.WsConns.Has(sid) {
+			area_obj.WsConns.Set(sid, ws)
 		}
-		AreasMap.Set( area_id,area )
+		AreasMap.Set( area_id, area_obj)
 	}
 }
 
 
-func GetSids( area_id string) []string {
+func AreaGetSids( area_id string) []string {
 	ret := make([]string,0)
-	area := Get( area_id )
-	if( area!=nil ){
-		for tmp := range area.Conns.IterItems(){
+	area_obj := AreaGet( area_id )
+	if( area_obj !=nil ){
+		for tmp := range area_obj.Conns.IterItems(){
 			ret=append(ret,tmp.Key)
 		}
-		for tmp := range area.WsConns.IterItems(){
+		for tmp := range area_obj.WsConns.IterItems(){
 			ret=append(ret,tmp.Key)
 		}
 	}
@@ -228,14 +214,14 @@ func GetSids( area_id string) []string {
 /**
  *  检查用户是否加入到场景中
  */
-func CheckUserJoined(area_id string, sid string) bool {
+func AreaCheckUserJoined(area_id string, sid string) bool {
 
-	area := Get( area_id )
-	if( area!=nil ) {
-		if  area.Conns.Has(sid) {
+	area_obj := AreaGet( area_id )
+	if( area_obj !=nil ) {
+		if  area_obj.Conns.Has(sid) {
 			return true
 		}
-		if  area.WsConns.Has(sid) {
+		if  area_obj.WsConns.Has(sid) {
 			return true
 		}
 	}
@@ -247,59 +233,59 @@ func CheckUserJoined(area_id string, sid string) bool {
 /**
  *  用户退出某个场景
  */
-func UnSubscribe(area_id string, sid string) {
+func AreaUnSubscribe(area_id string, sid string) {
 
-	area := Get( area_id )
-	if( area!=nil ) {
-		area.Conns.Delete( sid )
-		area.WsConns.Delete( sid )
-		AreasMap.Set( area_id, area )
+	area_obj := AreaGet( area_id )
+	if( area_obj !=nil ) {
+		area_obj.Conns.Delete( sid )
+		area_obj.WsConns.Delete( sid )
+		AreasMap.Set( area_id, area_obj)
 	}
 
 }
 
 // 用户退出所有场景
-func UserUnSubscribe(user_sid string) {
+func AreaUserUnSubscribe(user_sid string) {
 
 	for index, _ := range Areas {
-		UnSubscribe(Areas[index], user_sid)
+		AreaUnSubscribe(Areas[index], user_sid)
 	}
-	UnSubGlobal( user_sid )
+	AreaUnSubGlobal( user_sid )
 }
 
 /**
  *  在场景中广播消息
  */
-func Broatcast( sid string,area_id string, msg []byte ) {
+func AreaBroatcast( sid string,area_id string, msg []byte ) {
 
-	area := Get( area_id )
-	if( area==nil ) {
-		golog.Error("AreasMap no found :",area_id)
+	area_obj := AreaGet( area_id )
+	if( area_obj ==nil ) {
+		LogError("AreasMap no found :",area_id)
 		return
 	}
 	var conn *net.TCPConn
 	protocolPacket := new(protocol.Pack)
 	protocolPacket.Init()
 	// socket部分
-	for item := range area.Conns.IterItems() {
+	for item := range area_obj.Conns.IterItems() {
 		conn = item.Value.(*net.TCPConn)
 		buf,_ := protocolPacket.WrapBroatcastResp( area_id, sid, msg  )
 		//fmt.Println( "Broatcast:",  string(buf) )
 		n,err:=conn.Write( buf )
 		if err!=nil {
-			golog.Error("Broatcast conn.Write err :",err.Error()," expect ", len(buf),", but only write:",n )
+			LogError("Broatcast conn.Write err :",err.Error()," expect ", len(buf),", but only write:",n )
 		}
 	}
 
 	var wsconn *websocket.Conn
 	protocolJson := new(protocol.Json)
 	protocolJson.Init()
-	for item := range area.WsConns.IterItems() {
+	for item := range area_obj.WsConns.IterItems() {
 		wsconn = item.Value.(*websocket.Conn)
 		buf, _ := json.Marshal(protocolJson.WrapBroatcastRespObj( area_id, sid, msg) )
 		_,err:= wsconn.Write( buf )
 		if err!=nil {
-			golog.Error("Broatcast wsconn.Write err: ", err.Error() )
+			LogError("Broatcast wsconn.Write err: ", err.Error() )
 		}
 	}
 }
@@ -307,7 +293,7 @@ func Broatcast( sid string,area_id string, msg []byte ) {
 /**
  *  在场景中广播消息
  */
-func BroatcastGlobal( sid string, msg []byte ) {
+func AreaBroatcastGlobal( sid string, msg []byte ) {
 
 	var conn *net.TCPConn
 	//fmt.Println("场景里有:", GlobalArea.Conns.Size(),"个conn连接")
@@ -329,7 +315,7 @@ func BroatcastGlobal( sid string, msg []byte ) {
 	}
 }
 
-func UnSubGlobal( sid string ) {
+func AreaUnSubGlobal( sid string ) {
 
 	GlobalArea.Conns.Delete( sid )
 	GlobalArea.WsConns.Delete( sid )
@@ -339,9 +325,9 @@ func UnSubGlobal( sid string ) {
 /**
  *  点对点发送消息
  */
-func Push(  to_sid string ,from_sid string,to_data []byte ) {
+func AreaPush(  to_sid string ,from_sid string,to_data []byte ) {
 
-	conn :=  GetConn(to_sid)
+	conn :=  AreaGetConn(to_sid)
 	if( conn!=nil ) {
 		protocolPacket := new(protocol.Pack)
 		protocolPacket.Init()
@@ -356,7 +342,7 @@ func Push(  to_sid string ,from_sid string,to_data []byte ) {
 		return
 	}
 
-	ws:=GetWsConn(to_sid)
+	ws:=AreaGetWsConn(to_sid)
 	if( ws!=nil ) {
 		protocolJson := new(protocol.Json)
 		protocolJson.Init()
@@ -371,9 +357,7 @@ func Push(  to_sid string ,from_sid string,to_data []byte ) {
 }
 
 
-
-
-func GetConn(sid string) *net.TCPConn {
+func AreaGetConn(sid string) *net.TCPConn {
 
 	conn, ok := AllConns.Get(sid)
 	if !ok {
@@ -383,13 +367,13 @@ func GetConn(sid string) *net.TCPConn {
 	}
 }
 
-func DeleteConn(sid string) {
+func AreaDeleteConn(sid string) {
 
 	AllConns.Delete(sid)
 
 }
 
-func GetWsConn(sid string) *websocket.Conn {
+func AreaGetWsConn(sid string) *websocket.Conn {
 	wsconn, ok := AllWsConns.Get(sid)
 	if !ok {
 		return nil
@@ -398,19 +382,19 @@ func GetWsConn(sid string) *websocket.Conn {
 	}
 }
 
-func DeleteWsConn(sid string) {
+func AreaDeleteWsConn(sid string) {
 
 	AllWsConns.Delete(sid)
 
 }
 
-func DeleteUserssion(sid string) {
+func AreaDeleteUserssion(sid string) {
 
 	global.UserSessions.Delete(sid)
 
 }
 
-func ConnRegister(conn *net.TCPConn, sid string) {
+func AreaConnRegister(conn *net.TCPConn, sid string) {
 
 	//SubscribeChannel("area-global", conn, user_sid)
 
@@ -432,9 +416,9 @@ func ConnRegister(conn *net.TCPConn, sid string) {
 
 }
 
-func WsConnRegister(ws *websocket.Conn, user_sid string) {
+func AreaWsConnRegister(ws *websocket.Conn, user_sid string) {
 
-	golog.Debug("user_sid: ", user_sid)
+	LogDebug("user_sid: ", user_sid)
 	//SubscribeWsChannel("area-global", ws, user_sid)
 
 	AllWsConns.Set( user_sid, ws )
@@ -456,52 +440,52 @@ func WsConnRegister(ws *websocket.Conn, user_sid string) {
 }
 
 
-func DeleteSession(sid string) {
+func AreaDeleteSession(sid string) {
 
 	global.UserSessions.Delete(sid)
 }
 
-func DeleteUserJoinedAreas(sid string) {
+func AreaDeleteUserJoinedAreas(sid string) {
 
 	UserJoinedAreas.Delete(sid)
 
 }
 
-func FreeConn(conn *net.TCPConn, sid string) {
+func AreaFreeConn(conn *net.TCPConn, sid string) {
 
 	conn.Close()
-	golog.Warn("Sid closing:", sid)
-	DeleteConn(sid)
-	DeleteSession(sid)
-	DeleteUserJoinedAreas(sid)
+	LogWarn("Sid closing:", sid)
+	AreaDeleteConn(sid)
+	AreaDeleteSession(sid)
+	AreaDeleteUserJoinedAreas(sid)
 	atomic.AddInt32(&global.SumConnections, -1)
-	UserUnSubscribe(sid)
+	AreaUserUnSubscribe(sid)
 	AllConns.Delete( sid )
 }
 
-func FreeWsConn(ws *websocket.Conn, sid string) {
+func AreaFreeWsConn(ws *websocket.Conn, sid string) {
 
 	//ws.Write([]byte{'E', 'O', 'F'})
 	ws.Close()
-	golog.Warn("Sid closing:", sid)
-	DeleteWsConn(sid)
-	DeleteSession(sid)
-	DeleteUserJoinedAreas(sid)
+	LogWarn("Sid closing:", sid)
+	AreaDeleteWsConn(sid)
+	AreaDeleteSession(sid)
+	AreaDeleteUserJoinedAreas(sid)
 	atomic.AddInt32(&global.SumConnections, -1)
-	UserUnSubscribe(sid)
+	AreaUserUnSubscribe(sid)
 }
 
 /**
  * 检查
  */
-func CheckSid(sid string) bool {
+func AreaCheckSid(sid string) bool {
 
 	return true
 	_, exist := global.UserSessions.Get(sid)
 	return exist
 }
 
-func CreateSid() string {
+func AreaCreateSid() string {
 	r := rand.New(rand.NewSource(time.Now().UnixNano()))
 	sid := fmt.Sprintf("%d%d", r.Intn(99999), rand.Intn(999999))
 	return sid

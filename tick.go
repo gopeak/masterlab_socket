@@ -1,6 +1,6 @@
 // main loop
 
-package hub
+package main
 
 import (
 	"fmt"
@@ -8,8 +8,6 @@ import (
 	"net"
 	"masterlab_socket/global"
 	"masterlab_socket/lib/syncmap"
-	"masterlab_socket/golog"
-	"masterlab_socket/area"
 	"github.com/garyburd/redigo/redis"
 )
 
@@ -37,9 +35,9 @@ func TickSyncSession() {
 
 	for _ = range timer {
 		//ping := fmt.Sprintf(`{"cmd":"ping","ret":200,"time":%d }` , time.Now().Unix() );
-		/*var UserSessions = map[string]*area.Session{}
+		/*var UserSessions = map[string]*main.Session{}
 		for item := range global.SyncUserSessions.IterItems() {
-			UserSessions[item.Key] = item.Value.(*area.Session)
+			UserSessions[item.Key] = item.Value.(*main.Session)
 		}
 		js1, _ := json2.Marshal(UserSessions)
 		*/
@@ -68,9 +66,9 @@ func LoadSessionFromRedis() {
 	fmt.Println("GET morego/user_session ", reply)
 	if reply != nil {
 		global.UserSessions = reply.(*syncmap.SyncMap)
-		var UserSessions = map[string]*area.Session{}
+		var UserSessions = map[string]*main.Session{}
 		for item := range global.UserSessions.IterItems() {
-			UserSessions[item.Key] = item.Value.(*area.Session)
+			UserSessions[item.Key] = item.Value.(*main.Session)
 			fmt.Println(UserSessions[item.Key].Sid)
 		}
 	}
@@ -92,7 +90,7 @@ func TickWorkerServer() {
 				//fmt.Println("tcpAddr: ",index," ", ip_port)
 				conn, err_req := net.DialTimeout("tcp", ip_port, 5*time.Second)
 				if err_req != nil {
-					golog.Error("检测到 workerserver:", ip_port, " 连接异常!", now)
+					main.LogError("检测到 workerserver:", ip_port, " 连接异常!", now)
 					for i, addr := range global.WorkerServers {
 						if addr == ip_port {
 							global.WorkerServers = append(global.WorkerServers[:i], global.WorkerServers[i+1:]...)

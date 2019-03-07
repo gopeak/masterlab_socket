@@ -3,7 +3,7 @@
 //
 //
 
-package hub
+package main
 
 import (
 	"bufio"
@@ -13,37 +13,41 @@ import (
 	"time"
 	"encoding/json"
 	"masterlab_socket/global"
-	"masterlab_socket/golog"
 	"github.com/antonholmquist/jason"
 	"masterlab_socket/protocol"
-	main "masterlab_socket"
 )
+
+type Hub struct {
+
+	Init func()
+
+}
 
 /**
  * 监听客户端连接
  */
-func HubServer() {
+func (this *Hub)Server() {
 
 	hub_host := global.Config.Hub.Hub_host
 	hub_port, _ := strconv.Atoi(global.Config.Hub.Hub_port)
 	fmt.Println("Hub  Server :", hub_host, hub_port)
 	listen, err := net.ListenTCP("tcp", &net.TCPAddr{net.ParseIP(hub_host), hub_port, ""})
 	if err != nil {
-		golog.Error("Hub listenTCP Exception:", err.Error())
+		LogError("Hub listenTCP Exception:", err.Error())
 		return
 	}
-	hubListen(listen)
+	this.listen(listen)
 }
 
 /**
  *  处理客户端连接
  */
-func hubListen(listen *net.TCPListener) {
+func (this *Hub)listen(listen *net.TCPListener) {
 
 	for {
 		conn, err := listen.AcceptTCP()
 		if err != nil {
-			golog.Error("AcceptTCP Exception::", err.Error(), time.Now().UnixNano())
+			LogError("AcceptTCP Exception::", err.Error(), time.Now().UnixNano())
 			break
 		}
 		// 校验ip地址
@@ -52,13 +56,13 @@ func hubListen(listen *net.TCPListener) {
 		conn.SetNoDelay(false)
 
 		//go handleWorkerWithJson( conn  )
-		go handleHubConn(conn)
+		go this.handleHubConn(conn)
 
 	} //end for {
 
 }
 
-func handleHubConn(conn *net.TCPConn) {
+func (this *Hub)handleHubConn(conn *net.TCPConn) {
 
 	//声明一个管道用于接收解包的数据
 	reader := bufio.NewReader(conn)
@@ -70,13 +74,13 @@ func handleHubConn(conn *net.TCPConn) {
 			conn.Close()
 			return
 		}
-		if  main.TrimStr(string(cmd_buf))==""{
+		if  TrimStr(string(cmd_buf))==""{
 			//fmt.Println( "handleHubConn cmd empty" )
-			golog.Error( "handleHubConn protocol.HubUnPack err: ","handleHubConn cmd empty"  )
+			LogError( "handleHubConn protocol.HubUnPack err: ","handleHubConn cmd empty"  )
 			conn.Close()
 			return
 		}
-		go hubWorkeDispath( string(cmd_buf) , string(sid_buf), string(seq_buf), data_buf, conn)
+		go this.workeDispath( string(cmd_buf) , string(sid_buf), string(seq_buf), data_buf, conn)
 
 	}
 
@@ -85,7 +89,7 @@ func handleHubConn(conn *net.TCPConn) {
 
 //  Worker using REQ socket to do load-balancing
 //
-func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn) {
+func (this *Hub)workeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn) {
 
 	//  Process messages as they arrive
 
@@ -97,7 +101,7 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 		ret_buf := []byte( api.GetBase() )
 		write_buf,err:=protocol.HubPack( cmd,sid,seq,ret_buf )
 		if err!=nil {
-			golog.Error( "hubWorkeDispath GetBase protocol.HubPack err:", err.Error() )
+			LogError( "hubWorkeDispath GetBase protocol.HubPack err:", err.Error() )
 			return
 		}
 		_,errw := conn.Write( write_buf )
@@ -138,19 +142,19 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	if cmd == "Set" {
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub Set json err:",err_json.Error())
+			LogError("Hub Set json err:",err_json.Error())
 			return
 		}
 		key,err_key := data_json.GetString("key")
 		value,err_v := data_json.GetString("value")
 		expire,err_e := data_json.GetInt64("expire")
 		if( err_key!=nil || err_v!=nil || err_e!=nil ){
-			golog.Error("Hub Set json err:",err_key.Error()+err_v.Error()+err_e.Error())
+			LogError("Hub Set json err:",err_key.Error()+err_v.Error()+err_e.Error())
 			return
 		}
 		_,err:=Set(key,value,expire)
 		if( err!=nil ) {
-			golog.Error("Hub Set err:",err.Error())
+			LogError("Hub Set err:",err.Error())
 			//write_buf,_:=protocol.HubPack( cmd,sid,seq,[]byte( "0" ) )
 			//conn.Write( write_buf )
 		}
@@ -182,13 +186,13 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	if cmd == "CreateArea" {
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub Set json err:",err_json.Error())
+			LogError("Hub Set json err:",err_json.Error())
 			return
 		}
 		id,err1 := data_json.GetString("id")
 		name,err2 := data_json.GetString("name")
 		if( err1!=nil || err2!=nil )  {
-			golog.Error("Hub Set json err:",err1.Error()+err2.Error() )
+			LogError("Hub Set json err:",err1.Error()+err2.Error() )
 			return
 		}
 		ret:=api.CreateArea( id, name )
@@ -237,22 +241,22 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 
 	if cmd == "AreaAddSid" {
 		fmt.Println("AreaKickSid", data )
-		data_buf = main.TrimX001( data_buf )
+		data_buf = TrimX001( data_buf )
 		var map_data map[string]string
 		err_json := json.Unmarshal( data_buf ,&map_data )
 		//data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub AreaAddSid json Unmarshal err:",err_json.Error())
+			LogError("Hub AreaAddSid json Unmarshal err:",err_json.Error())
 			return
 		}
 		sid ,_ok1:= map_data["sid"]
 		area_id ,_ok2:= map_data["area_id"]
 		if( !_ok1 )  {
-			golog.Error("Hub AreaAddSid json sid no found" )
+			LogError("Hub AreaAddSid json sid no found" )
 			return
 		}
 		if( !_ok2 )  {
-			golog.Error("Hub AreaAddSid json area_id no found"  )
+			LogError("Hub AreaAddSid json area_id no found"  )
 			return
 		}
 		ret :=api.AreaAddSid(sid, area_id )
@@ -266,16 +270,16 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	}
 	if cmd == "AreaKickSid" {
 
-		data_buf = main.TrimX001( data_buf )
+		data_buf = TrimX001( data_buf )
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub AreaKickSid json err:",err_json.Error())
+			LogError("Hub AreaKickSid json err:",err_json.Error())
 			return
 		}
 		sid,err1 := data_json.GetString("sid")
 		area_id,err2 := data_json.GetString("area_id")
 		if( err1!=nil || err2!=nil )  {
-			golog.Error("Hub AreaKickSid json err:",err1.Error()+err2.Error() )
+			LogError("Hub AreaKickSid json err:",err1.Error()+err2.Error() )
 			return
 		}
 		ret :=api.AreaKickSid(sid, area_id )
@@ -291,12 +295,12 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	if cmd == "Push" {
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub Push json err:",err_json.Error())
+			LogError("Hub Push json err:",err_json.Error())
 			return
 		}
 		to_sid,err2 := data_json.GetString("sid")
 		if err2!=nil    {
-			golog.Error("Hub Push json err:",err2.Error())
+			LogError("Hub Push json err:",err2.Error())
 			return
 		}
 		fmt.Println( "hub recvice push:", string(data_buf) )
@@ -326,12 +330,12 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 	if cmd == "Broatcast" {
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub Broatcast json err:",err_json.Error())
+			LogError("Hub Broatcast json err:",err_json.Error())
 			return
 		}
 		area_id,err2 := data_json.GetString("area_id")
 		if(  err2!=nil )  {
-			golog.Error("Hub data_json json err:",err2.Error() )
+			LogError("Hub data_json json err:",err2.Error() )
 			return
 		}
 		ret := api.Broadcast( sid, area_id ,data_buf )
@@ -348,13 +352,13 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
-			golog.Error("Hub UpdateSession json err:",err_json.Error())
+			LogError("Hub UpdateSession json err:",err_json.Error())
 			return
 		}
 		sid,err1 := data_json.GetString("sid")
 		to_data,err2 := data_json.GetString("data")
 		if( err1!=nil || err2!=nil )  {
-			golog.Error("Hub UpdateSession json err:",err1.Error()+err2.Error() )
+			LogError("Hub UpdateSession json err:",err1.Error()+err2.Error() )
 			return
 		}
 		ret :=api.UpdateSession(sid, to_data )
@@ -371,7 +375,7 @@ func hubWorkeDispath(  cmd, sid, seq string,  data_buf []byte, conn *net.TCPConn
 		data_json ,err_json:= jason.NewObjectFromBytes( data_buf )
 		if( err_json!=nil ) {
 			err_str :="Hub UpdateSession json err:"+err_json.Error()
-			golog.Error( err_str )
+			LogError( err_str )
 			write_buf,_:=protocol.HubPack( cmd,sid,seq,[]byte( "[]" ) )
 			conn.Write( write_buf )
 			return

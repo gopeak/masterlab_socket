@@ -1,4 +1,4 @@
-package masterlab_socket
+package main
 
 import (
 	"bufio"
@@ -7,9 +7,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
-	"masterlab_socket/area"
 	"masterlab_socket/global"
-	"masterlab_socket/golog"
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/protocol"
 	"masterlab_socket/worker"
@@ -21,7 +19,7 @@ import (
 
 func WebsocketConnector(ip string, port int) {
 
-	golog.Info("Websocket Connetor bind :", ip, port)
+	LogInfo("Websocket Connetor bind :", ip, port)
 
 	var addr = flag.String("addr", fmt.Sprintf(":%d", port), "http service address")
 
@@ -63,12 +61,12 @@ func WebsocketHandleClient(wsconn *websocket.Conn) {
 	fmt.Println("ip_port:", configAddr)
 	tcpAddr, err := net.ResolveTCPAddr("tcp4", configAddr)
 	if err != nil {
-		golog.Error(os.Stderr, "Connector error: %s", err.Error())
+		LogError(os.Stderr, "Connector error: %s", err.Error())
 	}
 	req_conn, err := net.DialTCP("tcp", nil, tcpAddr)
 	//defer req_conn.Close()
 	if err != nil {
-		golog.Error(os.Stderr, "Connector error: %s", err.Error())
+		LogError(os.Stderr, "Connector error: %s", err.Error())
 	}
 	go wsHandleWorkerResponse(wsconn, req_conn)
 	last_sid := ""
@@ -80,12 +78,12 @@ func WebsocketHandleClient(wsconn *websocket.Conn) {
 		var buf []byte
 		if err = websocket.Message.Receive(wsconn, &buf); err != nil {
 			fmt.Println(" websocket.Message.Receive error:", last_sid, "  -->", err.Error())
-			area.FreeWsConn(wsconn, last_sid)
+			AreaFreeWsConn(wsconn, last_sid)
 			break
 		}
 		req_obj, err := protocolJson.GetReqObj(buf)
 		if err != nil {
-			golog.Error("1.WebsocketHandle protocolJson.GetReqObj err : " + err.Error())
+			LogError("1.WebsocketHandle protocolJson.GetReqObj err : " + err.Error())
 
 			continue
 		}
@@ -121,7 +119,7 @@ func wsHandleWorkerResponse(wsconn *websocket.Conn, req_conn *net.TCPConn) {
 	for {
 		_type,header_buf,data_buf,_, err := protocol.DecodePacket( reader )
 		if err != nil {
-			golog.Error( "wsHandleWorkerResponse protocol.DecodePacket err: ", err.Error() )
+			LogError( "wsHandleWorkerResponse protocol.DecodePacket err: ", err.Error() )
 			req_conn.Close()
 			break
 		}
@@ -139,7 +137,7 @@ func wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byt
 	protocolPack.Init()
 	resp_header, err := protocolPack.GetRespHeaderObj(  header_buf )
 	if err!=nil{
-		golog.Error( "wsResponseProcess protocolPack.GetRespHeaderObj err: ", err.Error() )
+		LogError( "wsResponseProcess protocolPack.GetRespHeaderObj err: ", err.Error() )
 		return
 	}
 	fmt.Println("handleWorkerResponse resp_obj.Data: ", resp_header.Cmd )
@@ -154,7 +152,7 @@ func wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byt
 		fmt.Println("AuthCmd: ", ret.Ret, string(data_buf) )
 		if ret.Ret == "ok" {
 			if wsconn != nil {
-				area.WsConnRegister( wsconn, resp_header.Sid )
+				AreaWsConnRegister( wsconn, resp_header.Sid )
 			}
 			fmt.Println("wsResponseProcess AuthCmd sid: ", resp_header.Cmd, ret.Sid )
 		}
@@ -180,7 +178,7 @@ func wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol.ReqRoot) interfa
 			return_obj = invoker_ret.(worker.ReturnType)
 			if return_obj.Ret == "ok" {
 				if wsconn != nil {
-					area.WsConnRegister(wsconn, return_obj.Sid)
+					AreaWsConnRegister(wsconn, return_obj.Sid)
 				}
 				fmt.Println("wsHandleWorkerResponse AuthCmd sid: ", req_obj.Header.Cmd, return_obj.Sid )
 			}
@@ -197,8 +195,8 @@ func wsDspatchMsg(req_obj *protocol.ReqRoot, wsconn *websocket.Conn, req_conn *n
 
 	var err error
 	// 认证检查,
-	if !global.IsAuthCmd(req_obj.Header.Cmd) && !area.CheckSid(req_obj.Header.Sid) {
-		area.FreeWsConn(wsconn, req_obj.Header.Sid)
+	if !global.IsAuthCmd(req_obj.Header.Cmd) && !AreaCheckSid(req_obj.Header.Sid) {
+		AreaFreeWsConn(wsconn, req_obj.Header.Sid)
 		err = errors.New("认证失败")
 		return 0, err
 	}

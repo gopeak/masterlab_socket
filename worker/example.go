@@ -4,8 +4,7 @@ import (
 	"fmt"
 	_ "fmt"
 	"github.com/antonholmquist/jason"
-	"masterlab_socket/area"
-	"masterlab_socket/golog"
+	main "masterlab_socket"
 	"net"
 )
 
@@ -13,7 +12,7 @@ func (this TaskType) Auth() ReturnType {
 
 	//sdk:=new(Sdk).Init(this.Cmd,this.Sid,this.Reqid,this.Data )
 	fmt.Println( "Auth this.Data:",string(this.Data) )
-	sid := area.CreateSid()
+	sid := main.AreaCreateSid()
 	if (sid != "") {
 		ret := ReturnType{"ok", "welcome", sid, ""}
 		return ret
@@ -50,7 +49,7 @@ func (this TaskType) Broadcast() string {
 	area_id, _ := json_obj.GetString("area_id")
 
 	if (area_id == "global") {
-		golog.Error("broatcast global failed")
+		main.LogError("broatcast global failed")
 		return ""
 	} else {
 		sdk.Broatcast(from_sid, area_id, this.Data)

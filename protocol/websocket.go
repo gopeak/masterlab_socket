@@ -3,7 +3,6 @@ package protocol
 import (
 	"encoding/json"
 	"fmt"
-	"masterlab_socket/util"
 )
 
 type Json struct {

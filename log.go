@@ -1,6 +1,6 @@
 // main loop
 
-package golog
+package main
 
 import (
 	"fmt"
@@ -8,7 +8,6 @@ import (
 	"os"
 	"runtime"
 	"time"
-
 	log "github.com/Sirupsen/logrus"
 	"gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
@@ -88,50 +87,50 @@ func log2Mongo(level string, args ...interface{}) {
 }
 
 // Debug logs a message at level Debug on the standard logger.
-func Debug(args ...interface{}) {
+func LogDebug(args ...interface{}) {
 
 	//log2Mongo("debug", args...)
 	log.Debug(args...)
 }
 
 // Print logs a message at level Info on the standard logger.
-func Print(args ...interface{}) {
+func LogPrint(args ...interface{}) {
 
 	log.Print(args...)
 }
 
 // Info logs a message at level Info on the standard logger.
-func Info(args ...interface{}) {
+func LogInfo(args ...interface{}) {
 	//log2Mongo("info", args...)
 	log.Info(args...)
 }
 
 // Warn logs a message at level Warn on the standard logger.
-func Warn(args ...interface{}) {
+func LogWarn(args ...interface{}) {
 	//log2Mongo("warn", args...)
 	log.Warn(args...)
 }
 
 // Warning logs a message at level Warn on the standard logger.
-func Warning(args ...interface{}) {
+func LogWarning(args ...interface{}) {
 	//log2Mongo("Warning", args...)
 	log.Warning(args...)
 }
 
 // Error logs a message at level Error on the standard logger.
-func Error(args ...interface{}) {
+func LogError(args ...interface{}) {
 	//log2Mongo("error", args...)
 	log.Error(args...)
 }
 
 // Panic logs a message at level Panic on the standard logger.
-func Panic(args ...interface{}) {
+func LogPanic(args ...interface{}) {
 	//log2Mongo("panic", args...)
 	log.Panic(args...)
 }
 
 // Fatal logs a message at level Fatal on the standard logger.
-func Fatal(args ...interface{}) {
+func LogFatal(args ...interface{}) {
 	//log2Mongo("fatal", args...)
 	log.Fatal(args...)
 }

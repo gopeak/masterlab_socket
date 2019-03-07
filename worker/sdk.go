@@ -1,19 +1,16 @@
 package worker
 
 import (
-	"masterlab_socket/golog"
+	main "masterlab_socket"
 	"masterlab_socket/global"
-	"masterlab_socket/area"
 	"masterlab_socket/lib/syncmap"
-	"masterlab_socket/util"
 	"masterlab_socket/protocol"
-	"masterlab_socket/hub"
 	"fmt"
 	"time"
 	"net"
 	"bufio"
 	"strconv"
-	"github.com/robfig/cron"
+	"gitmain.com/robfig/cron"
 	"encoding/json"
 )
 
@@ -119,7 +116,7 @@ func   InitReqHubPool( to_hub []string  ) {
 		var err_req error
 		conn, err_req:= factory()
 		if( err_req!=nil ) {
-			golog.Error( "InitConnectionHubPool hubconn  err:", err_req.Error() )
+			main.LogError( "InitConnectionHubPool hubconn  err:", err_req.Error() )
 			continue
 		}
 		ReqHubConns = append( ReqHubConns, conn )
@@ -175,21 +172,21 @@ func (sdk *Sdk) ReqHubAsync( req_cmd string , data []byte ,handler AfterWorkCall
 	seq_id := strconv.FormatInt( time.Now().UTC().UnixNano(), 10)
 	req_buf,err:= protocol.HubPack( req_cmd,"",seq_id, data )
 	if err != nil {
-		golog.Error( "ReqHubAsync protocol.HubPack err:" , err.Error() )
+		main.LogError( "ReqHubAsync protocol.HubPack err:" , err.Error() )
 		return err.Error(),false
 	}
 	index := main.RandInt64(0, int64(len(ReqHubConns)))
 	req_hub_conn  := ReqHubConns[index]
 
 	if( req_hub_conn==nil  ){
-		golog.Error( "req_hub_conn is nil "  )
+		main.LogError( "req_hub_conn is nil "  )
 		return "", false
 	}
 	callback_key:=req_cmd + seq_id
 	ReqSeqCallbacks.Set( callback_key, handler )
 	_,err = req_hub_conn.Write( req_buf )
 	if err!=nil {
-		golog.Error( "ReqHubAsync req_hub_conn.Write err:" , err.Error() )
+		main.LogError( "ReqHubAsync req_hub_conn.Write err:" , err.Error() )
 		return err.Error() ,false
 	}
 	return "ok",true
@@ -202,7 +199,7 @@ func (sdk *Sdk) ReqHub( req_cmd string , data []byte ) (string,bool) {
 	seq_id := strconv.FormatInt( time.Now().UTC().UnixNano(), 10)
 	req_buf,err:= protocol.HubPack( req_cmd, sdk.ReqHeader.Sid, seq_id, data )
 	if err != nil {
-		golog.Error( "ReqHub protocol.HubPack err:" , err.Error() )
+		main.LogError( "ReqHub protocol.HubPack err:" , err.Error() )
 		return err.Error(),false
 	}
 
@@ -250,7 +247,7 @@ func (sdk *Sdk) PushHub( req_cmd string , data []byte ) bool {
 
 	req_buf,err:= protocol.HubPack( req_cmd, sdk.ReqHeader.Sid, "", data )
 	if err != nil {
-		golog.Error( "ReqHub protocol.HubPack err:" , err.Error() )
+		main.LogError( "ReqHub protocol.HubPack err:" , err.Error() )
 		return false
 	}
 	sdk.connect()
@@ -268,7 +265,7 @@ func (sdk *Sdk)  GetBase() string {
 
 	// 单机模式直接返回内存中数据
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetBase()
 	}
 
@@ -284,7 +281,7 @@ func (sdk *Sdk)  GetBase() string {
 func (sdk *Sdk) GetEnableStatus() bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetEnableStatus()
 	}
 	ret,ok:= sdk.ReqHub( "GetEnableStatus",[]byte("")  )
@@ -318,7 +315,7 @@ func (sdk *Sdk) Disable() bool {
 func (sdk *Sdk) AddCron(expression string, exefnc func()) bool {
 
 	if cron, ok := global.Crons[expression]; ok {
-		golog.Info("cron exist :", cron)
+		main.LogInfo("cron exist :", cron)
 		return false
 	}
 	c := cron.New()
@@ -342,9 +339,9 @@ func (sdk *Sdk) RemoveCron(expression string) bool {
 
 func (sdk *Sdk) Get(key string) string {
 	if( global.SingleMode ) {
-		str,err:=hub.Get(key)
+		str,err:=main.Get(key)
 		if err!=nil {
-			golog.Error("Redis Get err:",err.Error())
+			main.LogError("Redis Get err:",err.Error())
 			return ""
 		}
 		return str
@@ -359,9 +356,9 @@ func (sdk *Sdk) Get(key string) string {
 func (sdk *Sdk) Set(key string, value string,expire int) bool {
 
 	if( global.SingleMode ) {
-		ret,err:=hub.Set(key,value,expire)
+		ret,err:=main.Set(key,value,expire)
 		if err!=nil {
-			golog.Error("Redis Set err:",err.Error())
+			main.LogError("Redis Set err:",err.Error())
 			return false
 		}
 		return ret
@@ -372,19 +369,19 @@ func (sdk *Sdk) Set(key string, value string,expire int) bool {
 }
 
 // 该方法仅在单机模式下调用
-func (sdk *Sdk) GetSessionType(sid string) *area.Session  {
+func (sdk *Sdk) GetSessionType(sid string) *main.Session  {
 
 	session,exist := global.UserSessions.Get(sid)
 	if !exist {
 		return nil
 	}
-	return session.(*area.Session)
+	return session.(*main.Session)
 }
 
 func (sdk *Sdk) GetSession(sid string)  string {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetSession( sid )
 	}
 	ret,ok := sdk.ReqHub( "GetSession",[]byte(sid)   )
@@ -398,7 +395,7 @@ func (sdk *Sdk) GetSession(sid string)  string {
 func (sdk *Sdk) Kick(sid string) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.Kick( sid )
 	}
 	return sdk.PushHub( "Kick",[]byte(sid) )
@@ -407,7 +404,7 @@ func (sdk *Sdk) Kick(sid string) bool {
 func (sdk *Sdk) CreateArea(id string, name string) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.CreateArea( id,name )
 	}
 	json:=fmt.Sprintf(`{"id":"%s","name":"%s","expire":%d}`,id,name)
@@ -418,7 +415,7 @@ func (sdk *Sdk) CreateArea(id string, name string) bool {
 func (sdk *Sdk) RemoveArea(id string) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.RemoveArea( id )
 	}
 	return sdk.PushHub( "RemoveArea",[]byte(id) )
@@ -427,7 +424,7 @@ func (sdk *Sdk) RemoveArea(id string) bool {
 func (sdk *Sdk) GetAreas() map[string]string {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetAreas(  )
 	}
 	var areas map[string]string
@@ -446,7 +443,7 @@ func (sdk *Sdk) GetAreas() map[string]string {
 func (sdk *Sdk) GetAreasStr() string {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		buf,err := json.Marshal(  api.GetAreas(  ) )
 		if err!=nil {
 			return "{}"
@@ -463,7 +460,7 @@ func (sdk *Sdk) GetAreasStr() string {
 func (sdk *Sdk) GetAreasKey()  []string {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetAreasKey(  )
 	}
 	var areas = make([]string,0 )
@@ -478,7 +475,7 @@ func (sdk *Sdk) GetAreasKey()  []string {
 func (sdk *Sdk) GetSidsByArea(channel_id string) string {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetSidsByArea( channel_id )
 	}
 	ret,ok :=  sdk.ReqHub( "GetSidsByArea",[]byte(channel_id)  )
@@ -492,7 +489,7 @@ func (sdk *Sdk) GetSidsByArea(channel_id string) string {
 func (sdk *Sdk) AreaAddSid(sid string, area_id string) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.AreaAddSid( sid, area_id  )
 	}
 	json:=fmt.Sprintf(`{"sid":"%s","area_id":"%s"}`,sid, area_id )
@@ -503,7 +500,7 @@ func (sdk *Sdk) AreaAddSid(sid string, area_id string) bool {
 func (sdk *Sdk) AreaKickSid( sid string, area_id string) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.AreaKickSid( sid, area_id  )
 	}
 	json:=fmt.Sprintf(`{"sid":"%s","area_id":"%s"}`,sid, area_id )
@@ -514,7 +511,7 @@ func (sdk *Sdk) AreaKickSid( sid string, area_id string) bool {
 func (sdk *Sdk) Push( from_sid string ,to_sid string , to_data  []byte ) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.Push ( from_sid,to_sid, to_data  )
 	}
 
@@ -534,7 +531,7 @@ func (sdk *Sdk) PushBySids(from_sid string,to_sids []string, data []byte) bool {
 func (sdk *Sdk) Broatcast(sid string ,area_id string,  data []byte ) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.Broadcast( sid,area_id, data  )
 	}
 	return sdk.PushHub( "Broatcast",data )
@@ -545,7 +542,7 @@ func (sdk *Sdk) Broatcast(sid string ,area_id string,  data []byte ) bool {
 func (sdk *Sdk) BroadcastAll( msg []byte ) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.BroadcastAll( msg )
 	}
 	return sdk.PushHub( "BroadcastAll", msg )
@@ -556,7 +553,7 @@ func (sdk *Sdk) BroadcastAll( msg []byte ) bool {
 func (sdk *Sdk) UpdateSession( sid string, data string ) bool {
 
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.UpdateSession( sid, data )
 	}
 	json:=fmt.Sprintf(`{"sid":"%s","data":"%s"}`,sid, data )
@@ -568,7 +565,7 @@ func (sdk *Sdk)GetUserJoinedAreas(sid string) string {
 
 	// 单机模式直接返回内存中数据
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetUserJoinedAreas(sid)
 	}
 
@@ -584,7 +581,7 @@ func (sdk *Sdk)GetAllSession( ) string {
 
 	// 单机模式直接返回内存中数据
 	if( global.SingleMode ) {
-		api := new(hub.Api)
+		api := new(main.Api)
 		return api.GetAllSession()
 	}
 

@@ -2,17 +2,32 @@
 //  main
 //
 
-package masterlab_socket
+package main
 
 import (
-	"masterlab_socket/area"
 	"masterlab_socket/global"
-	"masterlab_socket/golog"
-	"masterlab_socket/hub"
 	"masterlab_socket/lib/syncmap"
 	_ "net/http/pprof"
 	"runtime"
 )
+
+
+// 所有的场景名称列表
+var Areas = make([]string, 0, 1000)
+
+// 场景集合
+var AreasMap *syncmap.SyncMap
+
+// 一个全局的场景
+var GlobalArea   *AreaType
+
+// 所有的用户连接对象
+var AllConns *syncmap.SyncMap
+var AllWsConns *syncmap.SyncMap
+
+// 用户加入过的场景列表
+var UserJoinedAreas *syncmap.SyncMap
+
 
 // 初始化全局变量
 func initGlobal() {
@@ -25,7 +40,7 @@ func initGlobal() {
 	global.UserSessions = syncmap.New()
 	global.SingleMode = global.Config.SingleMode
 	global.AuthCmds = global.Config.Connector.AuthCcmds
-	area.UserJoinedAreas = syncmap.New()
+	UserJoinedAreas = syncmap.New()
 	global.InitWorkerAddr()
 }
 
@@ -38,7 +53,7 @@ func main() {
 
 	// 初始化配置和全局变量
 	global.InitConfig()
-	golog.InitLogger()
+	InitLogger()
 	initGlobal()
 
 	// 前端的socket服务
@@ -46,16 +61,17 @@ func main() {
 	go WebsocketConnector("", global.Config.Connector.WebsocketPort)
 
 	// 开启hub服务器
-	 go hub.HubServer()
+	hub := new(Hub)
+	go hub.Server()
 
 	// 预创建多个场景
-	go area.InitConfig()
+	go AreaInitConfig()
 
 	// 计划任务
 	schedule := new(Schedule)
 	go schedule.Run()
 
-	golog.Info("Server started!")
+	LogInfo("Server started!")
 
 	// C:\gopath\mongodb\bin\mongod.exe --dbpath=C:\gopath\mongodb\data
 	// D:\soft\MongoDB\bin\mongod.exe --dbpath=D:\soft\MongoDB\data

@@ -1,4 +1,4 @@
-package masterlab_socket
+package main
 
 import (
 	"flag"

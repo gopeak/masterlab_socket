@@ -1,10 +1,8 @@
-package hub
+package main
 
 import (
-	"masterlab_socket/golog"
 	"github.com/robfig/cron"
 	json_orgin "encoding/json"
-	"masterlab_socket/area"
 	"masterlab_socket/global"
 	"os"
 	"strings"
@@ -23,7 +21,7 @@ func (api *Api)GetBase() string {
 
 	dir, err:= os.Getwd()
 	if err != nil {
-		golog.Error("GetBase Error ", err.Error())
+		LogError("GetBase Error ", err.Error())
 	}
 	return strings.Replace(dir, "\\", "/", -1)
 }
@@ -52,7 +50,7 @@ func (api *Api)Disable() bool {
 func (api *Api)AddCron(expression string, exefnc func()) bool {
 
 	if cron, ok := global.Crons[expression]; ok {
-		golog.Info("cron exist :", cron)
+		LogInfo("cron exist :", cron)
 		return false
 	}
 	c := cron.New()
@@ -91,7 +89,7 @@ func (api *Api)GetSession(sid string) string {
 	}
 	str,err := json_orgin.Marshal(session)
 	if( err!=nil){
-		golog.Error("Api GetSession json Marshal err:",err.Error())
+		LogError("Api GetSession json Marshal err:",err.Error())
 		return "{}"
 	}
 	return string(str)
@@ -102,53 +100,53 @@ func (api *Api)Kick(sid string) bool {
 	protocolPacket := new(protocol.Pack)
 	protocolPacket.Init()
 
-	user_conn := area.GetConn(sid)
+	user_conn := AreaGetConn(sid)
 	if user_conn != nil {
 		// 通知消息退出
 		buf,_ := protocolPacket.WrapRespErr( "kicked" )
 		user_conn.Write( buf )
-		area.FreeConn(user_conn,sid )
+		AreaFreeConn(user_conn,sid )
 	}
 
-	user_wsconn := area.GetWsConn(sid)
+	user_wsconn := AreaGetWsConn(sid)
 	if user_wsconn != nil {
 		// 通知消息退出
 		protocolJson:= new(protocol.Json)
 		protocolJson.Init()
 		go user_wsconn.Write( protocolJson.WrapRespErr("kicked") )
-		area.FreeWsConn( user_wsconn,sid)
+		AreaFreeWsConn( user_wsconn,sid)
 	}
-	area.UserUnSubscribe(sid)
-	area.DeleteUserssion(sid)
+	AreaUserUnSubscribe(sid)
+	AreaDeleteUserssion(sid)
 
 	return true
 }
 
 func (api *Api)CreateArea(id string, name string) bool {
 
-	area.Create(id, name)
+	AreaCreate(id, name)
 	return true
 }
 
 func (api *Api)RemoveArea(id string) bool {
 
-	area.Remove(id)
+	AreaRemove(id)
 	return true
 }
 
 func (api *Api)GetAreas() map[string]string {
 
-	return area.Gets()
+	return AreaGets()
 }
 
 func (api *Api)GetAreasKey() []string {
 
-	return area.Areas
+	return Areas
 }
 
 func (api *Api)GetSidsByArea(channel_id string) string {
 
-	buf,err:= json_orgin.Marshal(area.GetSids(channel_id))
+	buf,err:= json_orgin.Marshal(AreaGetSids(channel_id))
 	if err!=nil {
 		return string(buf)
 	}else{
@@ -156,43 +154,42 @@ func (api *Api)GetSidsByArea(channel_id string) string {
 	}
 }
 
-
 func (api *Api)AreaAddSid(sid string, area_id string) bool {
 
-	return  area.AddSid( sid , area_id )
+	return  AreaAddSid( sid , area_id )
 }
 
 func (api *Api)AreaKickSid(sid string, area_id string) bool {
 
-	area.UnSubscribe( area_id,sid)
+	AreaUnSubscribe( area_id,sid)
 	return true
 }
 
 func (api *Api)Push( to_sid, from_sid   string , data_buf []byte ) bool {
-	area.Push( to_sid, from_sid, data_buf )
+	AreaPush( to_sid, from_sid, data_buf )
 	return true
 }
 
 func (api *Api)PushBySids(from_sid string,to_sids []string, data_buf []byte ) bool {
 
 	for _,to_sid:=   range to_sids {
-		area.Push( to_sid, from_sid, data_buf )
+		AreaPush( to_sid, from_sid, data_buf )
 	}
 	return true
 }
 
 func (this *Api) Broadcast( sid string, area_id string, msg []byte) bool {
 
-	area.Broatcast( sid, area_id ,msg)
+	AreaBroatcast( sid, area_id ,msg)
 	return true
 }
 
 func (this *Api) UpdateSession( sid string, data string ) bool {
 
 	tmp, user_session_exist := global.UserSessions.Get(sid)
-	var user_session *area.Session
+	var user_session *Session
 	if user_session_exist {
-		user_session = tmp.(*area.Session)
+		user_session = tmp.(*Session)
 		user_session.User = data
 		global.UserSessions.Set(sid, user_session)
 	}
@@ -200,13 +197,13 @@ func (this *Api) UpdateSession( sid string, data string ) bool {
 }
 
 func (api *Api)BroadcastAll( msg []byte ) bool {
-	area.BroatcastGlobal("GM",msg )
+	AreaBroatcastGlobal("GM",msg )
 	return true
 }
 
 func (api *Api)GetUserJoinedAreas( sid string ) string {
 
-	buf,err:=json_orgin.Marshal(area.GetSids(sid))
+	buf,err:=json_orgin.Marshal(AreaGetSids(sid))
 	if( err!=nil ) {
 		return  "[]"
 	}
@@ -215,9 +212,9 @@ func (api *Api)GetUserJoinedAreas( sid string ) string {
 
 func (api *Api)GetAllSession( ) string {
 
-	var UserSessions = map[string]*area.Session{}
+	var UserSessions = map[string]*Session{}
 	for item := range global.UserSessions.IterItems() {
-		UserSessions[item.Key] = item.Value.(*area.Session)
+		UserSessions[item.Key] = item.Value.(*Session)
 	}
 	ret, _ := json_orgin.Marshal(UserSessions)
 	return  string(ret)

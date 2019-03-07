@@ -1,13 +1,11 @@
-package masterlab_socket
+package main
 
 import (
 	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
-	"masterlab_socket/area"
 	"masterlab_socket/global"
-	"masterlab_socket/golog"
 	"masterlab_socket/protocol"
 	"masterlab_socket/worker"
 	"net"
@@ -23,11 +21,11 @@ func SocketConnector(ip string, port int) {
 
 	listen, err := net.ListenTCP("tcp", &net.TCPAddr{net.ParseIP(""), port, ""})
 	if err != nil {
-		golog.Error("ListenTCP Exception:", err.Error())
+		LogError("ListenTCP Exception:", err.Error())
 		return
 	}
 	// 初始化
-	golog.Debug("Game Connetor Server :", ip, port)
+	LogDebug("Game Connetor Server :", ip, port)
 	//go statTick()
 	listenAcceptTCP(listen)
 }
@@ -41,7 +39,7 @@ func listenAcceptTCP(listen *net.TCPListener) {
 		conn, err := listen.AcceptTCP()
 		defer conn.Close()
 		if err != nil {
-			golog.Error("AcceptTCP Exception::", err.Error())
+			LogError("AcceptTCP Exception::", err.Error())
 			continue
 		}
 		atomic.AddInt32(&global.SumConnections, 1)
@@ -50,7 +48,7 @@ func listenAcceptTCP(listen *net.TCPListener) {
 		// 校验ip地址
 		conn.SetKeepAlive(true)
 
-		go handleClient(conn, area.CreateSid())
+		go handleClient(conn, AreaCreateSid())
 		//go handleClientMsgSingle( conn ,CreateSid() )
 
 	} //end for {
@@ -63,7 +61,7 @@ func responseProcess( conn *net.TCPConn,  headerr_buf, data_buf []byte)  {
 	protocolPack.Init()
 	resp_header, err := protocolPack.GetRespHeaderObj(  headerr_buf )
 	if err!=nil{
-		golog.Error( "responseProcess protocolPack.GetRespHeaderObj err: ", err.Error(),string(data_buf) )
+		LogError( "responseProcess protocolPack.GetRespHeaderObj err: ", err.Error(),string(data_buf) )
 		return
 	}
 	//fmt.Println("responseProcess resp_obj.Data: ", string(data_buf) )
@@ -75,13 +73,13 @@ func responseProcess( conn *net.TCPConn,  headerr_buf, data_buf []byte)  {
 		err := json.Unmarshal( data_buf ,&ret)
 		if err!=nil{
 			//fmt.Println("AuthCmd return json err: ", err.Error(),string(data_buf)  )
-			golog.Error( "AuthCmd return json err: ", err.Error(),string(data_buf)  )
+			LogError( "AuthCmd return json err: ", err.Error(),string(data_buf)  )
 			return
 		}
 		//fmt.Println("AuthCmd: ", ret.Ret,string(data_buf) )
 		if ret.Ret == "ok" {
 			if conn != nil {
-				area.ConnRegister( conn, ret.Sid )
+				AreaConnRegister( conn, ret.Sid )
 			}
 		}
 	}
@@ -128,29 +126,29 @@ func handleClient(conn *net.TCPConn, sid string) {
 	//声明一个管道用于接收解包的数据
 	reader := bufio.NewReader(conn)
 	last_sid := ""
-	defer area.FreeConn(conn, last_sid)
+	defer AreaFreeConn(conn, last_sid)
 	protocolPacket := new(protocol.Pack)
 	protocolPacket.Init()
 	for {
 		if !global.Config.Enable {
 			buf,_ := protocolPacket.WrapResp( "Info", last_sid, 0 , 200, []byte(global.DISBALE_RESPONSE) )
 			conn.Write( buf )
-			area.FreeConn(conn, last_sid)
+			AreaFreeConn(conn, last_sid)
 			break
 		}
 		_type,header,data,all_buf,err := protocol.DecodePacket( reader )
 		if err!=nil {
-			golog.Error("SocketHandle protocol.DecodePacket err : "  + err.Error())
+			LogError("SocketHandle protocol.DecodePacket err : "  + err.Error())
 			buf,_ := protocolPacket.WrapResp( "Error", last_sid, 0 , 500, []byte(global.ERROR_RESPONSE) )
 			conn.Write( buf )
-			area.FreeConn(conn, last_sid)
+			AreaFreeConn(conn, last_sid)
 			return
 		}
 		req_obj ,err := protocolPacket.GetReqObj( _type,header,data )
 
 		if err != nil {
-			golog.Error("protocolPacket.GetReqObj err : "  + err.Error())
-			area.FreeConn(conn, last_sid)
+			LogError("protocolPacket.GetReqObj err : "  + err.Error())
+			AreaFreeConn(conn, last_sid)
 			break
 		}
 		last_sid = req_obj.Header.Sid
@@ -189,7 +187,7 @@ func directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoot ) interface{} {
 			return_obj = invoker_ret.(worker.ReturnType)
 			if return_obj.Ret == "ok" {
 				if conn != nil {
-					area.ConnRegister(conn, return_obj.Sid)
+					AreaConnRegister(conn, return_obj.Sid)
 				}
 				//fmt.Println("handleWorkerResponse AuthCmd sid: ", req_obj.Header.Cmd, return_obj.Sid )
 			}
@@ -206,8 +204,8 @@ func dispatchMsg(req_obj *protocol.ReqRoot, conn *net.TCPConn,all_buf []byte) (i
 
 	var err error
 	//  认证检查,
-	if !global.IsAuthCmd(req_obj.Header.Cmd) && !area.CheckSid(req_obj.Header.Sid) {
-		area.FreeConn(conn, req_obj.Header.Sid)
+	if !global.IsAuthCmd(req_obj.Header.Cmd) && !AreaCheckSid(req_obj.Header.Sid) {
+		AreaFreeConn(conn, req_obj.Header.Sid)
 		err = errors.New("Auth failed!")
 		return 0, err
 	}
@@ -237,7 +235,7 @@ func userTick(conn *net.TCPConn) {
 		buf,_ := protocolPacket.WrapResp( "ping", "", 0 , 200, Int64ToBytes(time.Now().Unix()) )
 		_,err := conn.Write( buf )
 		if err!=nil{
-			golog.Error( "Socket user_tick err:",err.Error() )
+			LogError( "Socket user_tick err:",err.Error() )
 			break
 		}
 	}

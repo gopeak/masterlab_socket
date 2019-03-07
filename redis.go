@@ -1,9 +1,8 @@
-package hub
+package main
 
 import (
 	"fmt"
 	"masterlab_socket/global"
-	"masterlab_socket/area"
 	"time"
 
 	"github.com/garyburd/redigo/redis"
@@ -27,7 +26,7 @@ func RedisInit() {
 	//n, err := RedisConn.Do("Set", "aaa", "vvvvvvvvv")
 	//fmt.Println(n, err)
 
-	data := &area.Session{
+	data := &Session{
 		``,
 		"{}",
 		true,  // 登录成功

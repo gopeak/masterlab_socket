@@ -1,0 +1,30 @@
+####################
+# worker 配置文件   #
+####################
+
+
+loglevel	=	"error"
+rpc_type	=	"go"  # string | flatbuffer
+single_mode	=	false
+
+
+servers = [
+        ["127.0.0.1","8001" ,"go"],
+        ["127.0.0.1","8002" ,"go"] ,
+        ["127.0.0.1","8003" ,"go"] ]
+        #["192.168.3.254", "8002","php"]
+connect_to_hub = ["127.0.0.1" ,"7302"]
+
+
+    database 	=	"masterlab_dev"
+    host        =   "47.244.62.11"
+    user 		= 	"remote_mysql_user"
+    password 	= 	"Hornet123"
+    port		=	"3306"
+    charset	    =	"utf8mb4_unicode_ci"
+    timeout	    =	"30"
+    max_open_conns   =   2000
+    max_idle_conns   =   1000
+
+		
+      

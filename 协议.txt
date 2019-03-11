@@ -1,0 +1,22 @@
+
+
+socket 协议包
+ |总长度4|type4|头长度4|header|data
+
+
+websocket  使用json格式
+
+请求数据包
+{ "header":{ "no_resp":false, "cmd":"", "seq_id":0,  "sid":"" , "token":"", "version":"1.0" ,"gzip":true}  , "type":"req", "data":{}  }
+
+
+响应数据包
+{ "header":{ "cmd":"", "seq_id":0,  "sid":"", "gzip":true  }  , "type":"response",  "status":0, "msg":"",  "data":{}  }
+
+{ "header":{ "chanel_id":"", "sid":""   }  , "type":"broatcast",   "data":{}  }
+
+{ "header":{  "sid":""  }  , "type":"recvice",   "data":{}  }
+
+
+
+

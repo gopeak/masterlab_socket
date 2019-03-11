@@ -1,0 +1,15 @@
+// connector.fbs
+namespace worker;
+
+
+table ReqHeader
+{  
+    seq :int;
+	sid : string;
+	no_resp : bool;
+	token : string;
+	version : string;
+	gzip : bool;
+}  
+
+root_type ReqHeader;

@@ -1,0 +1,15 @@
+// connector.fbs
+namespace worker;
+
+
+table RespHeader
+{
+    cmd: string;
+    seq: int ;
+	sid:  string;
+	gzip: bool;
+	status: int;
+
+}  
+ 
+root_type RespHeader;

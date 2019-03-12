@@ -60,6 +60,33 @@ func (this *Mysql) Connect() (bool,error){
 	return true,nil
 }
 
+func (this *Mysql) ShortConnect() (bool,error){
+	var err error
+	var config   MysqlConfigType
+	//if( !this.Connected ){
+		_, err = toml.DecodeFile("worker.toml", &config )
+		if  err != nil {
+			fmt.Println("toml.DecodeFile error:", err.Error())
+			this.Connected = false
+			return false, err
+		}
+		fmt.Println( "config:",config )
+		connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s",config.User,
+			config .Password,config .Host,config .Port,config.Database,config.Timeout,config.Charset)
+		fmt.Println( "connect_str:",connect_str )
+		this.Db, err = sql.Open("mysql",connect_str)
+		if err != nil {
+			fmt.Println("sql.Open err:",err.Error())
+			this.Connected = false
+			return false,err
+		}
+		this.Db.SetMaxOpenConns(0)
+		this.Db.SetMaxIdleConns(0)
+		this.Connected = true
+	//}
+	return true,nil
+}
+
 //插入 封装
 func (this *Mysql)  Insert(  sql string, args ...interface{}  ) ( int64, error) {
 

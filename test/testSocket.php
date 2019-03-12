@@ -61,7 +61,7 @@ function test($i, $host = '127.0.0.1', $port = '7002')
     } else {
         
         $header = '{"cmd":"Mail","sid":"1234516","ver":"1.2","seq":12123,"token":"sssssssssss121"}';
-        $body = '{"seq":"xxxxxxxxxxxxxx","host":"smtpdm.aliyun.com","port":"465","user":"sender@smtp.masterlab.vip","password":"MasterLab123Pwd","from":"sender@smtp.masterlab.vip","to":"121642038@qq.com","subject":"Hello","body":"hello world","attach":"D:/timg.jpg"}';
+        $body = '{"seq":"xxxxxxxxxxxxxx","host":"smtpdm.aliyun.com","port":"465","user":"sender@smtp.masterlab.vip","password":"MasterLab123Pwd","from":"sender@smtp.masterlab.vip","to":["121642038@qq.com","79720699@qq.com"],"subject":"Hello","body":"hello world","attach":"D:/timg.jpg"}';
 
         $header_len = mbstrlen($header);
         $body_len = mbstrlen($body);

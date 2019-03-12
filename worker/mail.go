@@ -47,9 +47,9 @@ func (this TaskType) Mail() ReturnType {
 		ret := ReturnType{"failed", "failed", this.ReqHeader.Sid, "json err:from not found"}
 		return ret
 	}
-	to, err := json_obj.GetString("to")
+	toArr, err := json_obj.GetStringArray("to")
 	if err != nil {
-		ret := ReturnType{"failed", "failed", this.ReqHeader.Sid, "json err:to not found"}
+		ret := ReturnType{"failed", "failed", this.ReqHeader.Sid, "json err:toArr not found"}
 		return ret
 	}
 	cc, err := json_obj.GetString("cc")
@@ -71,10 +71,15 @@ func (this TaskType) Mail() ReturnType {
 		return ret
 	}
 
-	fmt.Println(host, port, user, password, from, to, subject, body)
+	fmt.Println(host, port, user, password, from, toArr, subject, body)
 	m := gomail.NewMessage()
 	m.SetHeader("From", from)
-	m.SetHeader("To", to)
+	toStr := ""
+	for _, to := range toArr {
+		m.SetHeader("To", to)
+		toStr =   fmt.Sprintf("%s,%s", toStr, to)
+	}
+
 	if cc != "" {
 		m.SetAddressHeader("Cc", cc, cc_name)
 	}
@@ -96,16 +101,10 @@ func (this TaskType) Mail() ReturnType {
 		return ret
 	}
 
-	d := gomail.NewDialer(host, port_int, user, password)
 
-	// Send the email to Bob, Cora and Dan.
-	if err := d.DialAndSend(m); err != nil {
-		ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
-		return ret
-	}
 	
 	db := new(lib.Mysql)
-	_, err = db.Connect()
+	_, err = db.ShortConnect()
 	if err != nil {
 		ret := ReturnType{ "failed","failed" ,this.ReqHeader.Sid, "数据库连接失败:" + err.Error() }
 		return ret
@@ -121,8 +120,17 @@ func (this TaskType) Mail() ReturnType {
 		seq = create_time_nano
 	}
 
+	d := gomail.NewDialer(host, port_int, user, password)
+	// Send the email toArr Bob, Cora and Dan.
+	if err := d.DialAndSend(m); err != nil {
+		ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
+		_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
+			seq, subject, toStr, "error",timestamp, err.Error())
+		return ret
+	}
+
 	_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
-		seq, subject, to, "done",timestamp, "")
+		seq, subject, toStr, "done",timestamp, "")
 	if err != nil {
 		ret := ReturnType{"failed", "mail", this.ReqHeader.Sid, "sql replace into error"}
 		return ret

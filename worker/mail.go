@@ -77,7 +77,7 @@ func (this TaskType) Mail() ReturnType {
 	toStr := ""
 	for _, to := range toArr {
 		m.SetHeader("To", to)
-		toStr =   fmt.Sprintf("%s,%s", toStr, to)
+		toStr =   fmt.Sprintf("%s;%s", toStr, to)
 	}
 
 	if cc != "" {

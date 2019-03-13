@@ -110,9 +110,9 @@ func (this TaskType) Mail() ReturnType {
 		return ret
 	}
 	// 获取时间戳
-	t := time.Now()
-	timestamp := strconv.FormatInt(t.UTC().UnixNano(), 10)
-	create_time_nano := timestamp[:10]
+	now := time.Now().Unix()
+	timestamp := strconv.FormatInt(now,10)
+	create_time_nano := fmt.Sprintf("%v", time.Now().UnixNano());
 
 	var seq string
 	seq, err = json_obj.GetString("seq")

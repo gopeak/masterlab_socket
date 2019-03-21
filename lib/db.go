@@ -1,117 +1,111 @@
 package lib
 
 import (
+	"database/sql"
 	"fmt"
- 	"database/sql"
- 	_"github.com/go-sql-driver/mysql"
 	"github.com/BurntSushi/toml"
-
+	_ "github.com/go-sql-driver/mysql"
 )
 
 type Mysql struct {
-
-	Db *sql.DB
-
-	Sql string
-
-        Config MysqlConfigType
-
+	Db        *sql.DB
+	Sql       string
+	Config    MysqlConfigType
 	Connected bool
 }
 
 type MysqlConfigType struct {
-	Database        string		`toml:"database"`
-	User       	string		`toml:"user"`
-	Password        string		`toml:"password"`
-	Host            string		`toml:"host"`
-	Port      	string		`toml:"port"`
-	Charset         string		`toml:"charset"`
-	Timeout         string		`toml:"timeout"`
-	MaxOpenConns    int 		`toml:"max_open_conns"`
-	MaxIdleConns    int 		`toml:"max_idle_conns"`
+	Database     string `toml:"database"`
+	User         string `toml:"user"`
+	Password     string `toml:"password"`
+	Host         string `toml:"host"`
+	Port         string `toml:"port"`
+	Charset      string `toml:"charset"`
+	Timeout      string `toml:"timeout"`
+	MaxOpenConns int    `toml:"max_open_conns"`
+	MaxIdleConns int    `toml:"max_idle_conns"`
 }
 
-
-func (this *Mysql) Connect() (bool,error){
+func (this *Mysql) Connect() (bool, error) {
 	var err error
-	var config   MysqlConfigType
-	if( !this.Connected ){
-		_, err = toml.DecodeFile("worker.toml", &config )
-		if  err != nil {
+	var config MysqlConfigType
+	if (!this.Connected) {
+		_, err = toml.DecodeFile("worker.toml", &config)
+		if err != nil {
 			fmt.Println("toml.DecodeFile error:", err.Error())
 			this.Connected = false
 			return false, err
 		}
-		fmt.Println( "config:",config )
-		connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s",config.User,
-			config .Password,config .Host,config .Port,config.Database,config.Timeout,config.Charset)
-		fmt.Println( "connect_str:",connect_str )
-		this.Db, err = sql.Open("mysql",connect_str)
+		fmt.Println("config:", config)
+		connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s", config.User,
+			config.Password, config.Host, config.Port, config.Database, config.Timeout, config.Charset)
+		fmt.Println("connect_str:", connect_str)
+		this.Db, err = sql.Open("mysql", connect_str)
 		if err != nil {
-			fmt.Println("sql.Open err:",err.Error())
+			fmt.Println("sql.Open err:", err.Error())
 			this.Connected = false
-			return false,err
+			return false, err
 		}
 		this.Db.SetMaxOpenConns(config.MaxOpenConns)
 		this.Db.SetMaxIdleConns(config.MaxIdleConns)
 		this.Db.Ping()
 		this.Connected = true
 	}
-	return true,nil
+	return true, nil
 }
 
-func (this *Mysql) ShortConnect() (bool,error){
+func (this *Mysql) ShortConnect() (bool, error) {
 	var err error
-	var config   MysqlConfigType
+	var config MysqlConfigType
 	//if( !this.Connected ){
-		_, err = toml.DecodeFile("worker.toml", &config )
-		if  err != nil {
-			fmt.Println("toml.DecodeFile error:", err.Error())
-			this.Connected = false
-			return false, err
-		}
-		fmt.Println( "config:",config )
-		connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s",config.User,
-			config .Password,config .Host,config .Port,config.Database,config.Timeout,config.Charset)
-		fmt.Println( "connect_str:",connect_str )
-		this.Db, err = sql.Open("mysql",connect_str)
-		if err != nil {
-			fmt.Println("sql.Open err:",err.Error())
-			this.Connected = false
-			return false,err
-		}
-		this.Db.SetMaxOpenConns(0)
-		this.Db.SetMaxIdleConns(0)
-		this.Connected = true
+	_, err = toml.DecodeFile("worker.toml", &config)
+	if err != nil {
+		fmt.Println("toml.DecodeFile error:", err.Error())
+		this.Connected = false
+		return false, err
+	}
+	fmt.Println("config:", config)
+	connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s", config.User,
+		config.Password, config.Host, config.Port, config.Database, config.Timeout, config.Charset)
+	fmt.Println("connect_str:", connect_str)
+	this.Db, err = sql.Open("mysql", connect_str)
+	if err != nil {
+		fmt.Println("sql.Open err:", err.Error())
+		this.Connected = false
+		return false, err
+	}
+	this.Db.SetMaxOpenConns(0)
+	this.Db.SetMaxIdleConns(0)
+	this.Connected = true
 	//}
-	return true,nil
+	return true, nil
 }
 
 //插入 封装
-func (this *Mysql)  Insert(  sql string, args ...interface{}  ) ( int64, error) {
+func (this *Mysql) Insert(sql string, args ...interface{}) (int64, error) {
 
-	stmt, err := this.Db.Prepare( sql )
+	stmt, err := this.Db.Prepare(sql)
 	if err != nil {
-		fmt.Println( "Insert err:"+err.Error())
-		return 0,err
+		fmt.Println("Insert err:" + err.Error())
+		return 0, err
 	}
 	res, err := stmt.Exec(args...)
 	if err != nil {
-		fmt.Println( "Insert err:"+err.Error())
-		return 0,err
+		fmt.Println("Insert err:" + err.Error())
+		return 0, err
 	}
 	return res.LastInsertId()
 
 }
 
 //查询多行封装
-func (this *Mysql) GetRows( sql string, args ...interface{} ) []map[string]string {
-	db :=this.Db
+func (this *Mysql) GetRows(sql string, args ...interface{}) []map[string]string {
+	db := this.Db
 	this.Sql = sql
-	rets := make([]map[string]string,0)
-	rows, err := db.Query(sql,args)
+	rets := make([]map[string]string, 0)
+	rows, err := db.Query(sql, args)
 	if err != nil {
-		fmt.Println( "Insert err:"+err.Error())
+		fmt.Println("Insert err:" + err.Error())
 		return rets
 	}
 
@@ -124,7 +118,6 @@ func (this *Mysql) GetRows( sql string, args ...interface{} ) []map[string]strin
 		scanArgs[i] = &values[i]
 	}
 
-
 	for rows.Next() {
 		//将行数据保存到record字典
 		err = rows.Scan(scanArgs...)
@@ -134,20 +127,20 @@ func (this *Mysql) GetRows( sql string, args ...interface{} ) []map[string]strin
 				record[columns[i]] = string(col.([]byte))
 			}
 		}
-		rets = append( rets,record )
+		rets = append(rets, record)
 		fmt.Println(record)
 	}
 	return rets
 }
 
 //查询单行封装
-func (this *Mysql) GetRow( sql string,  args ...interface{})  map[string]string {
-	db :=this.Db
+func (this *Mysql) GetRow(sql string, args ...interface{}) map[string]string {
+	db := this.Db
 	this.Sql = sql
 	record := make(map[string]string)
-	rows, err := db.Query(sql,args...  )
+	rows, err := db.Query(sql, args...)
 	if err != nil {
-		fmt.Println( "query err:"+err.Error())
+		fmt.Println("query err:" + err.Error())
 		return record
 	}
 
@@ -159,7 +152,6 @@ func (this *Mysql) GetRow( sql string,  args ...interface{})  map[string]string 
 	for i := range values {
 		scanArgs[i] = &values[i]
 	}
-
 
 	for rows.Next() {
 		//将行数据保存到record字典
@@ -176,38 +168,38 @@ func (this *Mysql) GetRow( sql string,  args ...interface{})  map[string]string 
 }
 
 //更新数据
-func (this *Mysql) Update( sql string,args ...interface{}) (int64, error){
+func (this *Mysql) Update(sql string, args ...interface{}) (int64, error) {
 
-	db :=this.Db
+	db := this.Db
 	this.Sql = sql
-	stmt, err := db.Prepare( sql )
+	stmt, err := db.Prepare(sql)
 	if err != nil {
-		fmt.Println( "Update err:"+err.Error())
-		return 0,err
+		fmt.Println("Update err:" + err.Error())
+		return 0, err
 	}
-	res, err := stmt.Exec( args... )
+	res, err := stmt.Exec(args...)
 	if err != nil {
-		fmt.Println( "Update err:"+err.Error())
-		return 0,err
+		fmt.Println("Update err:" + err.Error())
+		return 0, err
 	}
 	return res.RowsAffected()
 
 }
 
 //删除数据
-func (this *Mysql)  Remove( sql string,args ...interface{} )  (int64, error){
+func (this *Mysql) Remove(sql string, args ...interface{}) (int64, error) {
 
-	db :=this.Db
+	db := this.Db
 	this.Sql = sql
-	stmt, err := db.Prepare( sql )
+	stmt, err := db.Prepare(sql)
 	if err != nil {
-		fmt.Println( "Remove err:"+err.Error())
-		return 0,err
+		fmt.Println("Remove err:" + err.Error())
+		return 0, err
 	}
-	res, err := stmt.Exec( args... )
+	res, err := stmt.Exec(args...)
 	if err != nil {
-		fmt.Println( "Remove err:"+err.Error())
-		return 0,err
+		fmt.Println("Remove err:" + err.Error())
+		return 0, err
 	}
 	return res.RowsAffected()
 
@@ -218,4 +210,3 @@ func (this *Mysql) checkErr(err error) {
 		panic(err)
 	}
 }
-

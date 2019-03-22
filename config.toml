@@ -18,14 +18,16 @@ single_mode	=	true
     max_packet_rate_unit = 10
     auth_cmds = ["Auth","Authorize"]
 
-[masterlab_db]
+[mysql]
     database 	=	"masterlab_dev"
     host        =   "47.244.62.11"
+    port		=	"3306"
     user 		= 	"remote_mysql_user"
     password 	= 	"Hornet123"
-    port		=	"3306"
     charset	    =	"utf8mb4_unicode_ci"
-    timeout	    =	"30"
+    timeout	    =	"20"
+    max_open_conns = 2000
+    max_idle_conns = 1000
 
 [object]
     data_type 	= "redis"
@@ -34,7 +36,6 @@ single_mode	=	true
     redis_password = ""
 
 [worker]
-    #  在分布式模式下 连接到worker servers的ip和端口
     to_servers = []
 
 [hub]
@@ -43,9 +44,6 @@ single_mode	=	true
 
 [area]
     init_area = ["area-global", "area-global2", "area-global3"]
-
-[admin]
-    http_port = "9090"
 
 [log]
     log_level	=	"error"

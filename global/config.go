@@ -8,11 +8,10 @@ import (
 )
 
 
-type Appconfig struct {
+type AppConfigType struct {
 	Enable int64 //  Listen to clients
 	Status string
 }
-
 
 type configType struct {
 	Name         string
@@ -22,8 +21,8 @@ type configType struct {
 	Loglevel     string
 	SingleMode   bool	  `toml:"single_mode"`
 	Log          log          `toml:"log"`
-	Admin        admin        `toml:"admin"`
 	Connector    connector    `toml:"connector"`
+	MysqlConfig  MsyqlConfig    `toml:"mysql"`
 	Object       object       `toml:"object"`
 	ToWorker     toWorker 	  `toml:"worker"`
 	Hub          hub          `toml:"hub"`
@@ -36,9 +35,6 @@ type log struct {
 	MongodbHost   string `toml:"mongodb_host"`
 	MongodbPort   string `toml:"mongodb_port"`
 }
-type admin struct {
-	HttpPort string `toml:"http_port"`
-}
 
 type connector struct {
 	WebsocketPort     int `toml:"websocket_port"`
@@ -48,6 +44,18 @@ type connector struct {
 	MaxPacketRate     int `toml:"max_packet_rate"`
 	MaxPacketRateUnit int `toml:"max_packet_rate_unit"`
 	AuthCcmds	[]string `toml:"auth_cmds"`
+}
+
+type MsyqlConfig struct {
+	Host      string `toml:"host"`
+	Port     string `toml:"port"`
+	User     string `toml:"user"`
+	Password string `toml:"password"`
+	Database string `toml:"database"`
+	Charset string `toml:"charset"`
+	Timeout string `toml:"timeout"`
+	MaxOpenConns int    `toml:"max_open_conns"`
+	MaxIdleConns int    `toml:"max_idle_conns"`
 }
 
 type object struct {

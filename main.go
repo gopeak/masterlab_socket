@@ -43,13 +43,13 @@ func main() {
 	initGlobal()
 
 	// 前端的socket服务
-	front_socket := new(connector.Connector)
-	go front_socket.Socket("", global.Config.Connector.SocketPort)
-	go front_socket.Websocket("", global.Config.Connector.WebsocketPort)
+	frontSocket := new(connector.Connector)
+	go frontSocket.Socket("", global.Config.Connector.SocketPort)
+	go frontSocket.Websocket("", global.Config.Connector.WebsocketPort)
 
 	// 开启hub服务器
-	hub_obj := new(hub.Hub)
-	go hub_obj.Server()
+	hubObj := new(hub.Hub)
+	go hubObj.Server()
 
 	// 预创建多个场景
 	go area.InitConfig()

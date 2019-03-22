@@ -3,43 +3,26 @@ package lib
 import (
 	"database/sql"
 	"fmt"
-	"github.com/BurntSushi/toml"
 	_ "github.com/go-sql-driver/mysql"
+	"masterlab_socket/global"
 )
 
 type Mysql struct {
 	Db        *sql.DB
 	Sql       string
-	Config    MysqlConfigType
+	Config    global.MsyqlConfig
 	Connected bool
-}
-
-type MysqlConfigType struct {
-	Database     string `toml:"database"`
-	User         string `toml:"user"`
-	Password     string `toml:"password"`
-	Host         string `toml:"host"`
-	Port         string `toml:"port"`
-	Charset      string `toml:"charset"`
-	Timeout      string `toml:"timeout"`
-	MaxOpenConns int    `toml:"max_open_conns"`
-	MaxIdleConns int    `toml:"max_idle_conns"`
 }
 
 func (this *Mysql) Connect() (bool, error) {
 	var err error
-	var config MysqlConfigType
+	//var config MysqlConfigType
+	config := global.Config.MysqlConfig;
 	if (!this.Connected) {
-		_, err = toml.DecodeFile("worker.toml", &config)
-		if err != nil {
-			fmt.Println("toml.DecodeFile error:", err.Error())
-			this.Connected = false
-			return false, err
-		}
-		fmt.Println("config:", config)
+		//fmt.Println("config:", config)
 		connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s", config.User,
 			config.Password, config.Host, config.Port, config.Database, config.Timeout, config.Charset)
-		fmt.Println("connect_str:", connect_str)
+		//fmt.Println("connect_str:", connect_str)
 		this.Db, err = sql.Open("mysql", connect_str)
 		if err != nil {
 			fmt.Println("sql.Open err:", err.Error())
@@ -56,18 +39,12 @@ func (this *Mysql) Connect() (bool, error) {
 
 func (this *Mysql) ShortConnect() (bool, error) {
 	var err error
-	var config MysqlConfigType
-	//if( !this.Connected ){
-	_, err = toml.DecodeFile("worker.toml", &config)
-	if err != nil {
-		fmt.Println("toml.DecodeFile error:", err.Error())
-		this.Connected = false
-		return false, err
-	}
-	fmt.Println("config:", config)
+	//var config MysqlConfigType
+	config := global.Config.MysqlConfig;
+	//fmt.Println("config:", config)
 	connect_str := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?timeout=%ss&collation=%s", config.User,
 		config.Password, config.Host, config.Port, config.Database, config.Timeout, config.Charset)
-	fmt.Println("connect_str:", connect_str)
+	//fmt.Println("connect_str:", connect_str)
 	this.Db, err = sql.Open("mysql", connect_str)
 	if err != nil {
 		fmt.Println("sql.Open err:", err.Error())

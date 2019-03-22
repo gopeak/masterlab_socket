@@ -135,8 +135,7 @@ func (this TaskType) Mail() ReturnType {
 		ret := ReturnType{"failed", "failed", this.ReqHeader.Sid, "json err:" + json_err.Error()}
 		return ret
 	}
-	fmt.Println(mailContent)
-
+	//fmt.Println(mailContent)
 	to_address := strings.Join(mailContent.To, ";")
 	db := new(lib.Mysql)
 	_, err := db.ShortConnect()

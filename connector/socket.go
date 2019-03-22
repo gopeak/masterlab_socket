@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"masterlab_socket/area"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
@@ -145,10 +146,14 @@ func (this *Connector)handleClient(conn *net.TCPConn, sid string) {
 		}
 		_type,header,data,all_buf,err := protocol.DecodePacket( reader )
 		if err!=nil {
-			golog.Error("SocketHandle protocol.DecodePacket err : "  + err.Error())
-			buf,_ := protocolPacket.WrapResp( "Error", last_sid, 0 , 500, []byte(global.ERROR_RESPONSE) )
-			conn.Write( buf )
 			area.FreeConn(conn, last_sid)
+			if err==io.EOF {
+				golog.Error("Client closed" )
+			}else{
+				golog.Error("SocketHandle protocol.DecodePacket err : "  + err.Error())
+				buf,_ := protocolPacket.WrapResp( "Error", last_sid, 0 , 500, []byte(global.ERROR_RESPONSE) )
+				conn.Write( buf )
+			}
 			return
 		}
 		req_obj ,err := protocolPacket.GetReqObj( _type,header,data )
@@ -180,8 +185,8 @@ func (this *Connector)directInvoker( conn *net.TCPConn, req_obj *protocol.ReqRoo
 	task_obj := new(worker.TaskType).Init(conn, req_obj)
 	invoker_ret := worker.InvokeObjectMethod(task_obj, req_obj.Header.Cmd)
 	fmt.Println("invoker_ret", invoker_ret)
-	fmt.Println("req_obj:",req_obj.Header.NoResp)
-	fmt.Println("req_obj.Type:",req_obj.Type)
+	//fmt.Println("req_obj:",req_obj.Header.NoResp)
+	//fmt.Println("req_obj.Type:",req_obj.Type)
 	// 判断是否需要响应数据
 	if req_obj.Type == protocol.TypeReq && !req_obj.Header.NoResp {
 		protocolPacket := new(protocol.Pack)

@@ -20,7 +20,7 @@ const (
 var Config configType
 
 // 服务器当前状态
-var AppConfig = & Appconfig{}
+var AppConfig = & AppConfigType{}
 
 var WorkerServers = make([]string, 0, 1000)
 

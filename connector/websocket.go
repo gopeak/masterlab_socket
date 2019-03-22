@@ -1,35 +1,33 @@
 package connector
 
 import (
-	"bufio"
+	"encoding/json"
 	"errors"
 	"flag"
 	"fmt"
 	"log"
-	"net"
-	"net/http"
-	"os"
-	"sync/atomic"
-	"encoding/json"
 	"masterlab_socket/area"
 	"masterlab_socket/global"
 	"masterlab_socket/golog"
 	"masterlab_socket/lib/websocket"
 	"masterlab_socket/protocol"
-	"masterlab_socket/worker"
 	"masterlab_socket/util"
+	"masterlab_socket/worker"
+	"net/http"
+	"os"
+	"sync/atomic"
 )
 
 func (this *Connector) Websocket(ip string, port int) {
 
-	golog.Info("Websocket Connetor bind :", ip, port)
+	fmt.Println("Websocket Connetor bind :", ip, port)
 
 	var addr = flag.String("addr", fmt.Sprintf(":%d", port), "http service address")
 
 	http.Handle("/ws", websocket.Handler(this.WebsocketHandleClient))
 
 	wd, _ := os.Getwd()
-	http_dir := fmt.Sprintf("%s/web/wwwroot", wd)
+	http_dir := fmt.Sprintf("%s/web", wd)
 	fmt.Println("Http_dir:", http_dir)
 	http.Handle("/", http.FileServer(http.Dir(http_dir)))
 	// 初始化群组
@@ -38,7 +36,6 @@ func (this *Connector) Websocket(ip string, port int) {
 	// worker.InitHandler()
 
 	log.Fatal(http.ListenAndServe(*addr, nil))
-
 }
 
 /**
@@ -58,22 +55,8 @@ func (this *Connector)WebsocketHandleClient(wsconn *websocket.Conn) {
 		protocolJson.Init()
 		protocolJson.WrapRespErr( global.ERROR_MAX_CONNECTIONS )
 		return
+	}
 
-	}
-	configAddr := global.GetRandWorkerAddr()
-	fmt.Println("ip_port:", configAddr)
-	tcpAddr, err := net.ResolveTCPAddr("tcp4", configAddr)
-	if err != nil {
-		golog.Error("net.ResolveTCPAddr err:",err.Error())
-		return
-	}
-	req_conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	//defer req_conn.Close()
-	if err != nil {
-		golog.Error("net.DialTCP err:",err.Error())
-		return
-	}
-	go this.wsHandleWorkerResponse(wsconn, req_conn)
 	last_sid := ""
 	// 监听客户端发送的数据
 	protocolJson := new(protocol.Json)
@@ -81,25 +64,25 @@ func (this *Connector)WebsocketHandleClient(wsconn *websocket.Conn) {
 	defer wsconn.Close()
 	for {
 		var buf []byte
-		if err = websocket.Message.Receive(wsconn, &buf); err != nil {
+		if err := websocket.Message.Receive(wsconn, &buf); err != nil {
 			fmt.Println(" websocket.Message.Receive error:", last_sid, "  -->", err.Error())
 			area.FreeWsConn(wsconn, last_sid)
 			break
 		}
+		fmt.Println( "WebsocketHandleClient Receive: ", string(buf)  )
 		req_obj, err := protocolJson.GetReqObj(buf)
 		if err != nil {
 			golog.Error("1.WebsocketHandle protocolJson.GetReqObj err : " + err.Error())
-
 			continue
 		}
 		last_sid = req_obj.Header.Sid
 		fmt.Println("req_obj.Header.Cmd: " +  req_obj.Header.Cmd)
 
-		fmt.Println( "WebsocketHandleClient Receive: ", string(buf)  )
+		//fmt.Println( "WebsocketHandleClient Receive: ", string(buf)  )
 		//fmt.Println( "WebsocketHandleClient req_obj header: ", req_obj.Header  )
-		go func(req_obj *protocol.ReqRoot, wsconn *websocket.Conn, req_conn *net.TCPConn) {
+		go func(req_obj *protocol.ReqRoot, wsconn *websocket.Conn) {
 
-			ret, ret_err := this.wsDspatchMsg(req_obj, wsconn, req_conn)
+			ret, ret_err := this.wsDspatchMsg(req_obj, wsconn)
 			if ret_err != nil {
 				if ret < 0 {
 					fmt.Println(ret_err.Error())
@@ -111,30 +94,11 @@ func (this *Connector)WebsocketHandleClient(wsconn *websocket.Conn) {
 				}
 			}
 
-		}(req_obj, wsconn, req_conn)
+		}(req_obj, wsconn)
 
 	}
 }
 
-func (this *Connector)wsHandleWorkerResponse(wsconn *websocket.Conn, req_conn *net.TCPConn) {
-
-	reader := bufio.NewReader(req_conn)
-	protocolJson := new(protocol.Json)
-	protocolJson.Init()
-	for {
-		_type,header_buf,data_buf,_, err := protocol.DecodePacket( reader )
-		if err != nil {
-			golog.Error( "wsHandleWorkerResponse protocol.DecodePacket err: ", err.Error() )
-			req_conn.Close()
-			break
-		}
-		fmt.Println("wsHandleWorkerResponse  data :", _type, string(header_buf), string(data_buf) )
-		this.wsResponseProcess( wsconn,header_buf, data_buf  )
-		buf :=protocolJson.WrapResp( header_buf,data_buf,200,"" )
-		fmt.Println( "protocolJson.WrapResp:",string(buf) )
-		go wsconn.Write( buf )
-	}
-}
 
 func (this *Connector)wsResponseProcess(wsconn *websocket.Conn, header_buf []byte, data_buf []byte) {
 
@@ -145,7 +109,7 @@ func (this *Connector)wsResponseProcess(wsconn *websocket.Conn, header_buf []byt
 		golog.Error( "wsResponseProcess protocolPack.GetRespHeaderObj err: ", err.Error() )
 		return
 	}
-	fmt.Println("handleWorkerResponse resp_obj.Data: ", resp_header.Cmd )
+	fmt.Println("wsResponseProcess resp_obj.Data: ", resp_header.Cmd )
 
 	if global.IsAuthCmd(resp_header.Cmd) {
 		var ret worker.ReturnType
@@ -185,7 +149,7 @@ func (this *Connector)wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol
 				if wsconn != nil {
 					area.WsConnRegister(wsconn, return_obj.Sid)
 				}
-				fmt.Println("wsHandleWorkerResponse AuthCmd sid: ", req_obj.Header.Cmd, return_obj.Sid )
+				fmt.Println("wsDirectInvoker AuthCmd sid: ", req_obj.Header.Cmd, return_obj.Sid )
 			}
 		}
 	}
@@ -196,7 +160,7 @@ func (this *Connector)wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol
 /**
  * 根据消息类型分发处理
  */
-func (this *Connector)wsDspatchMsg(req_obj *protocol.ReqRoot, wsconn *websocket.Conn, req_conn *net.TCPConn) (int, error) {
+func (this *Connector)wsDspatchMsg(req_obj *protocol.ReqRoot, wsconn *websocket.Conn) (int, error) {
 
 	var err error
 	// 认证检查,
@@ -206,18 +170,6 @@ func (this *Connector)wsDspatchMsg(req_obj *protocol.ReqRoot, wsconn *websocket.
 		return 0, err
 	}
 	// 判断单机模式下不需要请求worker
-	if global.SingleMode {
-		this.wsDirectInvoker( wsconn ,req_obj )
-		return  1, nil
-	}
-
-	protocolPack := new(protocol.Pack)
-	protocolPack.Init()
-	buf,_ := protocolPack.WrapReqWithHeader( &req_obj.Header , req_obj.Data)
-	// 提交给worker
-	if req_conn != nil {
-		go req_conn.Write(buf)
-	}
-
-	return 1, nil
+	this.wsDirectInvoker( wsconn ,req_obj )
+	return  1, nil
 }

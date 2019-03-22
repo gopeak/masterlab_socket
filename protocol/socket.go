@@ -76,7 +76,7 @@ func DecodePacket(r *bufio.Reader) ( uint32, []byte,  []byte, []byte, error) {
 	if err != nil {
 		return 0,nil,nil,nil,err// errors.Annotate(err, "read total size")
 	}
-	fmt.Println( "totalsize" , totalsize)
+	//fmt.Println( "totalsize" , totalsize)
 	if totalsize < 12 {
 		return 0,nil, nil,nil,errors.New( fmt.Sprintf("bad packet. totalsize:%d", totalsize))
 	}
@@ -91,10 +91,10 @@ func DecodePacket(r *bufio.Reader) ( uint32, []byte,  []byte, []byte, error) {
 	}
 
 	_type :=   uint32(pack[4] )
-	fmt.Println( "type:" ,_type )
+	//fmt.Println( "type:" ,_type )
 
 	headersize =   uint32(pack[8] )
-	fmt.Println( "headersize"  ,headersize )
+	//fmt.Println( "headersize"  ,headersize )
 	if len(pack)< int(headersize+12) {
 		fmt.Println( "pack:"  ,string(pack) )
 		return 0,nil,nil,nil, errors.New("headersize error")

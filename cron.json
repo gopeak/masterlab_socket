@@ -1,24 +1,26 @@
 {
   "desc": "Project compute",
-  "exe_bin": "C:/xampp/php/php.exe",
   "schedule": [
     {
       "name": "Project",
-      "exp": "0 50 23 * * ?",
+      "exe_bin": "C:/xampp7.2/php/php.exe",
+      "exp": "0 57 23 * * ?",
       "file": "C:/www/masterlab/app/server/timer/project.php",
-      "arg": ""
+      "arg": "-f"
     },
     {
       "name": "ProjectReport",
-      "exp": "0 56 23 * * ?",
+      "exe_bin": "C:/xampp7.2/php/php.exe",
+      "exp": "0 58 23 * * ?",
       "file": "C:/www/masterlab/app/server/timer/projectDayReport.php",
-      "arg": ""
+      "arg": "-f"
     },
     {
       "name": "SprintReport",
-      "exp": "0 58 23 * * ?",
+      "exe_bin": "C:/xampp7.2/php/php.exe",
+      "exp": "0 59 23 * * ?",
       "file": "C:/www/masterlab/app/server/timer/sprintDayReport.php",
-      "arg": ""
+      "arg": "-f"
     }
   ]
 }

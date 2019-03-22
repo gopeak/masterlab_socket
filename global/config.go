@@ -55,8 +55,6 @@ type object struct {
 	RedisHost     string `toml:"redis_host"`
 	RedisPort     string `toml:"redis_port"`
 	RedisPassword string `toml:"redis_password"`
-	MonogoHost    string `toml:"monogo_host"`
-	MonogoPort    int    `toml:"3306"`
 }
 
 type toWorker struct {

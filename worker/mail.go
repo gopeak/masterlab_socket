@@ -7,15 +7,64 @@ import (
 	"gopkg.in/gomail.v2"
 	"masterlab_socket/lib"
 	"masterlab_socket/util"
+	"net/smtp"
 	"strconv"
+	"strings"
 	"time"
 )
 
+type loginAuth struct {
+	username, password string
+}
+func LoginAuth(username, password string) smtp.Auth {
+	return &loginAuth{username, password}
+}
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	// return "LOGIN", []byte{}, nil
+	return "LOGIN", []byte(a.username), nil
+}
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		switch string(fromServer) {
+		case "Username:":
+			return []byte(a.username), nil
+		case "Password:":
+			return []byte(a.password), nil
+		}
+	}
+	return nil, nil
+}
+func MergeSlice(s1 []string, s2 []string) []string {
+	slice := make([]string, len(s1)+len(s2))
+	copy(slice, s1)
+	copy(slice[len(s1):], s2)
+	return slice
+}
 
+func SendToMail(user, password, host, subject, body, mailtype, replyToAddress string, to, cc, bcc []string) error {
+	// hp := strings.Split(host, ":")
+	//auth := smtp.PlainAuth("", user, password, hp[0])
+	auth := LoginAuth(user, password)
+	var content_type string
+	if mailtype == "html" {
+		content_type = "Content-Type: text/" + mailtype + "; charset=UTF-8"
+	} else {
+		content_type = "Content-Type: text/plain" + "; charset=UTF-8"
+	}
+
+	cc_address := strings.Join(cc, ";")
+	bcc_address := strings.Join(bcc, ";")
+	to_address := strings.Join(to, ";")
+	msg := []byte("To: " + to_address + "\r\nFrom: Masterlab<" + user + ">\r\nSubject: " + subject + "\r\nReply-To: " + replyToAddress + "\r\nCc: " + cc_address + "\r\nBcc: " + bcc_address + "\r\n" + content_type + "\r\n\r\n" + body)
+
+	send_to := MergeSlice(to, cc)
+	send_to = MergeSlice(send_to, bcc)
+	err := smtp.SendMail(host, auth, user, send_to, msg)
+	return err
+}
 func (this TaskType) Mail() ReturnType {
 
 	//sdk:=new(Sdk).Init(this.Cmd,this.Sid,this.Reqid,this.Data )
-
 	// 获取数据
 	fmt.Println("Mail this.Data:", string(this.Data))
 	json_obj, err := jason.NewObjectFromBytes(this.Data)
@@ -53,13 +102,13 @@ func (this TaskType) Mail() ReturnType {
 		ret := ReturnType{"failed", "failed", this.ReqHeader.Sid, "json err:toArr not found"}
 		return ret
 	}
-	cc, err := json_obj.GetString("cc")
+	cc, err := json_obj.GetStringArray("cc")
 	if err != nil {
-		cc = ""
+		cc = nil
 	}
-	cc_name, err := json_obj.GetString("cc_name")
+	bcc, err := json_obj.GetStringArray("bcc")
 	if err != nil {
-		cc_name = ""
+		bcc = nil
 	}
 	subject, err := json_obj.GetString("subject")
 	if err != nil {
@@ -74,15 +123,12 @@ func (this TaskType) Mail() ReturnType {
 
 	fmt.Println(host, port, user, password, from, toArr, subject, body)
 	m := gomail.NewMessage()
-	m.SetHeader("From", from)
+	m.SetHeader("From", from, "Masterlab")
 	toStr := ""
 	for _, to := range toArr {
-		m.SetHeader("To", to)
+		//m.SetHeader("To", to)
+		m.SetAddressHeader("To", to, to)
 		toStr =   fmt.Sprintf("%s;%s", toStr, to)
-	}
-
-	if cc != "" {
-		m.SetAddressHeader("Cc", cc, cc_name)
 	}
 
 	m.SetHeader("Subject", subject)
@@ -102,8 +148,6 @@ func (this TaskType) Mail() ReturnType {
 		return ret
 	}
 
-
-	
 	db := new(lib.Mysql)
 	_, err = db.ShortConnect()
 	if err != nil {
@@ -120,15 +164,26 @@ func (this TaskType) Mail() ReturnType {
 	if err != nil {
 		seq = create_time_nano
 	}
-
-
-	d := gomail.NewDialer(host, port_int, user, password)
-	// Send the email toArr Bob, Cora and Dan.
-	if err := d.DialAndSend(m); err != nil {
-		ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
-		_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
-			seq, subject, toStr, "error",timestamp, err.Error())
-		return ret
+	if port=="465" || port=="995"{
+		d := gomail.NewDialer(host, port_int, user, password)
+		// Send the email toArr Bob, Cora and Dan.
+		if err := d.DialAndSend(m); err != nil {
+			ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
+			_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
+				seq, subject, toStr, "error",timestamp, err.Error())
+			return ret
+		}
+	}else{
+		m.Reset();
+		noSslHost := fmt.Sprintf("%s:%s", host, port)
+		err := SendToMail(user, password, noSslHost, subject, body, "html", "", toArr, cc, bcc)
+		if err != nil {
+			fmt.Println("Send mail error!")
+			ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
+			_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
+				seq, subject, toStr, "error",timestamp, err.Error())
+			return ret
+		}
 	}
 
 	_, err  = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",

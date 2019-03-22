@@ -11,6 +11,7 @@ import (
 	"time"
 )
 
+
 func (this TaskType) Mail() ReturnType {
 
 	//sdk:=new(Sdk).Init(this.Cmd,this.Sid,this.Reqid,this.Data )
@@ -119,6 +120,7 @@ func (this TaskType) Mail() ReturnType {
 	if err != nil {
 		seq = create_time_nano
 	}
+
 
 	d := gomail.NewDialer(host, port_int, user, password)
 	// Send the email toArr Bob, Cora and Dan.

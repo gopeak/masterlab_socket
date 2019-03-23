@@ -31,9 +31,6 @@ type configType struct {
 
 type log struct {
 	LogLevel      string `toml:"log_level"`
-	LogBehindType string `toml:"log_behind_type"`
-	MongodbHost   string `toml:"mongodb_host"`
-	MongodbPort   string `toml:"mongodb_port"`
 }
 
 type connector struct {

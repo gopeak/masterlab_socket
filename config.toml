@@ -47,5 +47,4 @@ single_mode	=	true
 
 [log]
     log_level	=	"error"
-    mongodb_host = "localhost"
-    mongodb_port = "27017"
+    log_file	=	""

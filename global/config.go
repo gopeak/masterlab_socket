@@ -18,7 +18,6 @@ type configType struct {
 	Enable       bool
 	Status       string
 	Version      string
-	Loglevel     string
 	SingleMode   bool	  `toml:"single_mode"`
 	Log          log          `toml:"log"`
 	Connector    connector    `toml:"connector"`

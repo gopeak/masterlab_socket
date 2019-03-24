@@ -6,7 +6,6 @@ name 		=	"Masterlab Socket Server"
 enable 		= 	true
 status 		= 	"dev"
 version		=	"1.0"
-loglevel	=	"info"
 single_mode	=	true
 
 [connector]

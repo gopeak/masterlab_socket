@@ -18,11 +18,11 @@ single_mode	=	true
     auth_cmds = ["Auth","Authorize"]
 
 [mysql]
-    database 	=	"masterlab_dev"
-    host        =   "47.244.62.11"
+    database 	=	"masterlab"
+    host        =   "127.0.0.1"
     port		=	"3306"
-    user 		= 	"remote_mysql_user"
-    password 	= 	"Hornet123"
+    user 		= 	"root"
+    password 	= 	"root"
     charset	    =	"utf8mb4_unicode_ci"
     timeout	    =	"20"
     max_open_conns = 2000

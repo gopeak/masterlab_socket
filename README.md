@@ -5,8 +5,8 @@
  
 ## golang 环境安装： 
    golang下载地址 https://studygolang.com/dl
-   * Windows 安装示例 http://www.masterlab.vip/help.php?md=masterlab_socket_centos_install
-   * Linux 安装示例 http://www.masterlab.vip/help.php?md=masterlab_socket_win_install
+   * Windows 安装示例 [windows下搭建golang开发环境](windows下搭建golang开发环境)
+   * Linux 安装示例 [centos操作系统配置golang开发环境](centos操作系统配置golang开发环境)
 
 ## 编译
 下载 masterlab_socket 源码

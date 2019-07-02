@@ -88,7 +88,7 @@ func sendByNoSSL(mailContent *MailContent) error {
 	cc_address := strings.Join(mailContent.Cc, ";")
 	bcc_address := strings.Join(mailContent.Bcc, ";")
 	to_address := strings.Join(mailContent.To, ";")
-	msg := []byte("To: " + to_address + "\r\nFrom: Masterlab<" + mailContent.User + ">\r\nSubject: " + mailContent.Subject + "\r\nReply-To: " + replyToAddress + "\r\nCc: " + cc_address + "\r\nBcc: " + bcc_address + "\r\n" + content_type + "\r\n\r\n" + mailContent.Body)
+	msg := []byte("To: " + to_address + "\r\nFrom: Masterlab<" + mailContent.From + ">\r\nSubject: " + mailContent.Subject + "\r\nReply-To: " + replyToAddress + "\r\nCc: " + cc_address + "\r\nBcc: " + bcc_address + "\r\n" + content_type + "\r\n\r\n" + mailContent.Body)
 
 	send_to := MergeSlice(mailContent.To, mailContent.Cc)
 	send_to = MergeSlice(send_to, mailContent.Bcc)

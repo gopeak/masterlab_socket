@@ -56,6 +56,13 @@ type ResponseRoot struct {
 	Data []byte             `json:"data"`
 }
 
+type ResponseWsRoot struct {
+	Type string             `json:"type"`
+	Status int				`json:"status"`
+	Header  RespHeader     	`json:"header"`
+	Data string             `json:"data"`
+}
+
 type RespHeader struct {
 	Cmd    string        `json:"cmd"`
 	SeqId  int           `json:"seq_id"`

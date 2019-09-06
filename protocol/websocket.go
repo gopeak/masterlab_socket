@@ -69,16 +69,14 @@ func (this *Json) WrapResp( req_obj *ReqRoot,  data []byte, status int, msg stri
 	resp_header_obj.Sid = req_obj.Header.Sid
 	resp_header_obj.Status = status
 
-	header,_:= json.Marshal(resp_header_obj);
-	data_str := string(data)
-	if( util.TrimStr(data_str)==""){
-		data_str = `""`
-	}
-	header_str := string(header)
+	resp_ws_obj := ResponseWsRoot{};
 
-	return []byte(fmt.Sprintf(`{"type":"%s","status":%d,"msg":"%s","header":%s,"data":%s}`,
-		TypeResp, status, msg, header_str ,data_str ))
-
+	resp_ws_obj.Header =resp_header_obj
+	resp_ws_obj.Data = string(data)
+	resp_ws_obj.Type = TypeResp
+	resp_ws_obj.Status = status
+	resp_buf,_:= json.Marshal(resp_ws_obj);
+	return resp_buf
 }
 
 

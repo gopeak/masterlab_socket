@@ -60,7 +60,7 @@ func (this *Json) GetPushObj(data []byte) (*PushRoot, error) {
 	return stb, err
 }
 
-func (this *Json) WrapRespObj( req_obj *ReqRoot, invoker_ret []byte, status int ) ResponseRoot {
+func (this *Json) WrapResp( req_obj *ReqRoot,  data []byte, status int, msg string  ) []byte  {
 
 	resp_header_obj := RespHeader{}
 	resp_header_obj.Cmd = req_obj.Header.Cmd
@@ -68,29 +68,19 @@ func (this *Json) WrapRespObj( req_obj *ReqRoot, invoker_ret []byte, status int 
 	resp_header_obj.Gzip = req_obj.Header.Gzip
 	resp_header_obj.Sid = req_obj.Header.Sid
 	resp_header_obj.Status = status
-	this.ProtocolObj.RespObj.Header =resp_header_obj
-	this.ProtocolObj.RespObj.Data = invoker_ret
-	this.ProtocolObj.RespObj.Type = TypeResp
 
-	return this.ProtocolObj.RespObj
-}
-
-func (this *Json) WrapResp(   header []byte, data []byte, status int, msg string )  []byte  {
-
-	header = util.TrimX001( header )
+	header,_:= json.Marshal(resp_header_obj);
 	data_str := string(data)
 	if( util.TrimStr(data_str)==""){
 		data_str = `""`
 	}
 	header_str := string(header)
-	if( util.TrimStr(header_str)==""){
-		header_str = "{}"
-	}
-	return []byte(fmt.Sprintf(`{"type":"%s","status":%d,"msg":"%s","header":%s,"data":%s}`,
-			TypeResp, status, msg, header_str ,data_str ))
 
+	return []byte(fmt.Sprintf(`{"type":"%s","status":%d,"msg":"%s","header":%s,"data":%s}`,
+		TypeResp, status, msg, header_str ,data_str ))
 
 }
+
 
 func (this *Json) WrapPushRespObj(to_sid string, from_sid string , data []byte ) PushRoot {
 

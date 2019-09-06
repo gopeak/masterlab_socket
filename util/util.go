@@ -2,19 +2,19 @@ package util
 
 import (
 	"bufio"
-	"io/ioutil"
-	"strconv"
-	"os"
-	"masterlab_socket/golog"
-	"strings"
 	"crypto/rand"
-	"math/big"
-	"math"
 	"encoding/binary"
 	"encoding/json"
-	"fmt"
-	"regexp"
 	"errors"
+	"fmt"
+	"io/ioutil"
+	"masterlab_socket/golog"
+	"math"
+	"math/big"
+	"os"
+	"regexp"
+	"strconv"
+	"strings"
 )
 
 func ReadAll(filePth string) ([]byte, error) {

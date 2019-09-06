@@ -15,6 +15,7 @@ import (
 	"masterlab_socket/worker"
 	"net/http"
 	"os"
+	"strconv"
 	"sync/atomic"
 )
 
@@ -128,19 +129,39 @@ func (this *Connector)wsResponseProcess(wsconn *websocket.Conn, header_buf []byt
 	}
 }
 
+func Convert2Byte( invoker_ret interface{}) []byte{
+
+	var data_buf []byte
+
+	switch invoker_ret.(type) {      //多选语句switch
+	case string:
+		data_buf = []byte( invoker_ret.(string) )
+	case int:
+		data_buf = []byte(strconv.Itoa( invoker_ret.(int) ))
+	case worker.ReturnType:
+		data_buf,_ = json.Marshal( invoker_ret.(worker.ReturnType) )
+	}
+	return data_buf
+}
+
 func (this *Connector)wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol.ReqRoot) interface{} {
 
 	task_obj := new(worker.TaskType).WsInit(wsconn, req_obj)
 	invoker_ret := worker.InvokeObjectMethod(task_obj, req_obj.Header.Cmd)
 	//fmt.Println("invoker_ret", invoker_ret)
+	protocolJson := new(protocol.Json)
+	protocolJson.Init()
+	data_buf := []byte("");
+	switch invoker_ret.(type) {
+		 case  worker.ReturnType:
+			 data_buf,_ = json.Marshal( invoker_ret.(worker.ReturnType) )
+		 default:
+			 data_buf = util.Convert2Byte( invoker_ret )
+	}
+	res_buf:= protocolJson.WrapResp( req_obj ,data_buf, 200, "" )
+	wsconn.Write(res_buf)
 	// 判断是否需要响应数据
 	if req_obj.Type == protocol.TypeReq && !req_obj.Header.NoResp {
-		protocolJson := new(protocol.Json)
-		protocolJson.Init()
-		data_buf := util.Convert2Byte( invoker_ret )
-		resp_obj:= protocolJson.WrapRespObj( req_obj ,data_buf, 200 )
-		buf,_ := json.Marshal(resp_obj)
-		wsconn.Write( buf )
 
 		if global.IsAuthCmd(req_obj.Header.Cmd) {
 			var return_obj worker.ReturnType
@@ -151,6 +172,7 @@ func (this *Connector)wsDirectInvoker( wsconn *websocket.Conn, req_obj *protocol
 				}
 				fmt.Println("wsDirectInvoker AuthCmd sid: ", req_obj.Header.Cmd, return_obj.Sid )
 			}
+
 		}
 	}
 	return invoker_ret

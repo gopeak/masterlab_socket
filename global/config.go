@@ -2,9 +2,9 @@ package global
 
 import (
 	"fmt"
-	"math/rand"
+	"masterlab_socket/cmd"
 	"masterlab_socket/lib/BurntSushi/toml"
-	"flag"
+	"math/rand"
 )
 
 
@@ -78,7 +78,8 @@ type area struct {
 func InitConfig() {
 
 	var filepath string
-	flag.StringVar(&filepath,"c", "config.toml", "config.toml's file path")
+	//flag.StringVar(&filepath,"c", "config.toml", "config.toml's file path")
+	filepath = cmd.CfgFile;
 	fmt.Println( "filepath:", filepath )
 	if _, err := toml.DecodeFile( filepath, &Config); err != nil {
 		fmt.Println("toml.DecodeFile error:", err)

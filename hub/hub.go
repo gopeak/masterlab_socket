@@ -31,7 +31,7 @@ func (this *Hub)Server() {
 
 	hub_host := global.Config.Hub.Hub_host
 	hub_port, _ := strconv.Atoi(global.Config.Hub.Hub_port)
-	fmt.Println("Hub  Server :", hub_host, hub_port)
+	//fmt.Println("Hub  Server :", hub_host, hub_port)
 	listen, err := net.ListenTCP("tcp", &net.TCPAddr{net.ParseIP(hub_host), hub_port, ""})
 	if err != nil {
 		golog.Error("Hub listenTCP Exception:", err.Error())

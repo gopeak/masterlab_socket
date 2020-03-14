@@ -5,6 +5,7 @@ package main
 
 import (
 	"masterlab_socket/area"
+	"masterlab_socket/cmd"
 	"masterlab_socket/connector"
 	"masterlab_socket/cron"
 	"masterlab_socket/global"
@@ -14,6 +15,8 @@ import (
 	_ "net/http/pprof"
 	"runtime"
 )
+
+
 
 // 初始化全局变量
 func initGlobal() {
@@ -36,6 +39,8 @@ func initGlobal() {
 func main() {
 
 	runtime.GOMAXPROCS(runtime.NumCPU())
+
+	cmd.Execute();
 
 	// 初始化配置和全局变量
 	global.InitConfig()
@@ -60,8 +65,7 @@ func main() {
 
 	golog.Info("Server started!")
 
-	// C:\gopath\mongodb\bin\mongod.exe --dbpath=C:\gopath\mongodb\data
-	// D:\soft\MongoDB\bin\mongod.exe --dbpath=D:\soft\MongoDB\data
+	//go build;
 	select {}
 
 }

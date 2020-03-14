@@ -34,6 +34,7 @@ func (this *Connector)Socket(ip string, port int) {
 	}
 	// 初始化
 	golog.Debug("Game Connetor Server :", ip, port)
+	fmt.Println("Socket  Server :", ip, port)
 	//go statTick()
 	this.listenAcceptTCP(listen)
 }

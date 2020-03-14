@@ -21,8 +21,7 @@ import (
 
 func (this *Connector) Websocket(ip string, port int) {
 
-	fmt.Println("Websocket Connetor bind :", ip, port)
-
+	fmt.Println("Websocket  Server bind :", ip, port)
 	var addr = flag.String("addr", fmt.Sprintf(":%d", port), "http service address")
 
 	http.Handle("/ws", websocket.Handler(this.WebsocketHandleClient))

@@ -87,8 +87,38 @@
 			"revisionTime": "2016-03-29T15:39:55Z"
 		},
 		{
+			"checksumSHA1": "MlE3iO0btJSHnKRZbWvckwW42yI=",
+			"path": "github.com/takama/daemon",
+			"revision": "aa76b0035d1239b7bb3ae1bd84cd88ef2e0a1f1e",
+			"revisionTime": "2018-04-03T11:37:44Z"
+		},
+		{
 			"checksumSHA1": "igQSWuUMHLb7aOCp0wOKSH9ocQ4=",
 			"path": "golang.org/x/sys/unix",
+			"revision": "b6889370fb1098ed892bd3400d189bb6a3355813",
+			"revisionTime": "2019-01-20T05:37:32Z"
+		},
+		{
+			"checksumSHA1": "Hu8GoQK1euwtE4UjrhXepmk2NM8=",
+			"path": "golang.org/x/sys/windows",
+			"revision": "b6889370fb1098ed892bd3400d189bb6a3355813",
+			"revisionTime": "2019-01-20T05:37:32Z"
+		},
+		{
+			"checksumSHA1": "P9OIhD26uWlIST/me4TYnvseCoY=",
+			"path": "golang.org/x/sys/windows/registry",
+			"revision": "b6889370fb1098ed892bd3400d189bb6a3355813",
+			"revisionTime": "2019-01-20T05:37:32Z"
+		},
+		{
+			"checksumSHA1": "qDDitPkTu7H4djoGfbSzIOet1wM=",
+			"path": "golang.org/x/sys/windows/svc",
+			"revision": "b6889370fb1098ed892bd3400d189bb6a3355813",
+			"revisionTime": "2019-01-20T05:37:32Z"
+		},
+		{
+			"checksumSHA1": "2r2jKuLuFOs4tqF8BXnsFdLHQAA=",
+			"path": "golang.org/x/sys/windows/svc/mgr",
 			"revision": "b6889370fb1098ed892bd3400d189bb6a3355813",
 			"revisionTime": "2019-01-20T05:37:32Z"
 		},

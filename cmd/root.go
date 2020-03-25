@@ -19,6 +19,14 @@ var (
 	Daemon bool
 
 	RootCmd = &cobra.Command{
+		Use:   "status",
+		Short: "Status Masterlab Socket",
+		Run: func(cmd *cobra.Command, args []string) {
+			fmt.Println("config file:", CfgFile)
+			fmt.Println("Masterlab status is normal")
+		},
+	}
+	startCmd = &cobra.Command{
 		Use:   "start",
 		Short: "Start Masterlab Socket",
 		Run: func(cmd *cobra.Command, args []string) {
@@ -36,7 +44,7 @@ var (
 				os.Exit(0)
 
 			} else {
-				fmt.Println("gonne start")
+				fmt.Println("Masterlab start")
 			}
 		},
 	}
@@ -78,8 +86,9 @@ var (
 
 func init() {
 	cobra.OnInitialize(initConfig)
-	RootCmd.Flags().StringVarP(&CfgFile, "config", "c", "", "config file (default is $HOME/config.toml)")
-	RootCmd.Flags().BoolVarP(&Daemon, "daemon", "d", false, "is daemon?")
+	startCmd.Flags().StringVarP(&CfgFile, "config", "c", "", "config file (default is $HOME/config.toml)")
+	startCmd.Flags().BoolVarP(&Daemon, "daemon", "d", false, "is daemon?")
+	RootCmd.AddCommand(startCmd)
 	RootCmd.AddCommand(stopCmd)
 	RootCmd.AddCommand(versionCmd)
 

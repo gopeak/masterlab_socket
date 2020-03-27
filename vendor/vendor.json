@@ -63,6 +63,12 @@
 			"revisionTime": "2019-03-08T09:06:25Z"
 		},
 		{
+			"checksumSHA1": "UYDU8nJJ/RXSTrR+dgQodj78uQI=",
+			"path": "github.com/inconshreveable/mousetrap",
+			"revision": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75",
+			"revisionTime": "2014-10-17T20:07:13Z"
+		},
+		{
 			"checksumSHA1": "Z7opAUYaWhAvx1qd1dWXdm9Ra6Q=",
 			"path": "github.com/json-iterator/go",
 			"revision": "0ff49de124c6f76f8494e194af75bde0f1a49a29",
@@ -85,6 +91,18 @@
 			"path": "github.com/robfig/cron",
 			"revision": "0f39cf7ebc65a602f45692f9894bd6a193faf8fa",
 			"revisionTime": "2016-03-29T15:39:55Z"
+		},
+		{
+			"checksumSHA1": "/p8GdVK4dIxK+Mc99xKUpk92NcI=",
+			"path": "github.com/spf13/cobra",
+			"revision": "95f2f73ed97e57387762620175ccdc277a8597a0",
+			"revisionTime": "2020-02-28T18:13:40Z"
+		},
+		{
+			"checksumSHA1": "SYcZl2+5o5l7EInG3AuRs0PFkL0=",
+			"path": "github.com/spf13/pflag",
+			"revision": "2e9d26c8c37aae03e3f9d4e90b7116f5accb7cab",
+			"revisionTime": "2019-09-18T19:59:20Z"
 		},
 		{
 			"checksumSHA1": "MlE3iO0btJSHnKRZbWvckwW42yI=",

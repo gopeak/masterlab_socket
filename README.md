@@ -28,10 +28,10 @@ go build
 masterlab_socket有两个配置文件, `config.toml` 是主配置文件，有端口和数据库连接的配置等信息。`cron.json`是定时执行任务配置。  
 相关命令  
 ```
-启动命令： ./masterlab_scoket start
-后台运行： ./masterlab_scoket start -d
-停止后台进程：./masterlab_scoket stop
-指定配置文件：./masterlab_scoket start start -c /xxx/config.toml
+启动命令：    ./masterlab_scoket start
+后台运行：    ./masterlab_scoket start -d
+停止后台进程： ./masterlab_scoket stop
+指定配置文件： ./masterlab_scoket start start -c /xxx/config.toml
 ```
 
    ![](http://www.masterlab.vip/docs/images/masterlab_socket/masterlab_socket_win.png)  

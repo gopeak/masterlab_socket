@@ -31,12 +31,15 @@ var (
 		Short: "Start Masterlab Socket",
 		Run: func(cmd *cobra.Command, args []string) {
 			if Daemon {
-				command := exec.Command("masterlab_socket", "start")
+				dir, _ := os.Executable()
+				exPath := filepath.Dir(dir)
+				sep := string(os.PathSeparator)
+				command := exec.Command(exPath + sep + "masterlab_socket", "start")
 				if err := command.Start(); err != nil { // 运行命令
 					log.Fatal(err)
 				}
 				fmt.Printf("Masterlab start, [PID] %d running...\n", command.Process.Pid)
-				err := ioutil.WriteFile("gonne.lock", []byte(fmt.Sprintf("%d", command.Process.Pid)), 0666)
+				err := ioutil.WriteFile("masterlab_daemon.lock", []byte(fmt.Sprintf("%d", command.Process.Pid)), 0666)
 				if err != nil { // 运行命令
 					log.Fatal(err)
 				}
@@ -61,8 +64,8 @@ var (
 		Use:   "stop",
 		Short: "Stop Masterlab Socket",
 		Run: func(cmd *cobra.Command, args []string) {
-			strb, _ := ioutil.ReadFile("gonne.lock")
-			fmt.Println("kill gonne.lock: ", string(strb))
+			strb, _ := ioutil.ReadFile("masterlab_daemon.lock")
+			fmt.Println("kill masterlab_daemon.lock: ", string(strb))
 			if runtime.GOOS != "windows" {
 				command := exec.Command("kill", string(strb))
 				if err := command.Start(); err != nil {

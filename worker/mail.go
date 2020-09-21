@@ -34,7 +34,7 @@ type MailContent struct {
 	Attach      string   `json:"attach"`
 }
 
-func (this *MailContent) Init( ) *MailContent {
+func (this *MailContent) Init() *MailContent {
 
 	this.Seq = ""
 	this.Host = ""
@@ -92,14 +92,14 @@ func sendByNoSSL(mailContent *MailContent) error {
 
 	send_to := MergeSlice(mailContent.To, mailContent.Cc)
 	send_to = MergeSlice(send_to, mailContent.Bcc)
-	err := smtp.SendMail(noSslHost, auth, mailContent.User, send_to, msg)
+	err := smtp.SendMail(noSslHost, auth, mailContent.From, send_to, msg)
 	return err
 }
 
 // 通过gomail库SSL加密发送
-func  sendBySSL(mailContent *MailContent) error {
+func sendBySSL(mailContent *MailContent) error {
 	m := gomail.NewMessage()
-	m.SetHeader("From", mailContent.FromName+"<"+mailContent.From+">", )
+	m.SetHeader("From", mailContent.FromName+"<"+mailContent.From+">")
 	m.SetHeader("To", mailContent.To...)
 	m.SetHeader("Subject", mailContent.Subject)
 	if mailContent.ContentType == "html" {
@@ -146,13 +146,13 @@ func (this TaskType) Mail() ReturnType {
 	// 获取时间戳
 	now := time.Now().Unix()
 	timestamp := strconv.FormatInt(now, 10)
-	create_time_nano := fmt.Sprintf("%v", time.Now().UnixNano());
+	create_time_nano := fmt.Sprintf("%v", time.Now().UnixNano())
 	if mailContent.Seq == "" {
 		mailContent.Seq = create_time_nano
 	}
 	if mailContent.Port == "465" || mailContent.Port == "995" {
 		// Send the email toArr Bob, Cora and Dan.
-		if err := sendBySSL( mailContent ); err != nil {
+		if err := sendBySSL(mailContent); err != nil {
 			fmt.Println("Send mail error!", err.Error())
 			ret := ReturnType{"filed", "mail", this.ReqHeader.Sid, err.Error()}
 			_, err = db.Insert("REPLACE INTO   `main_mail_queue` (seq, `title`, `address`, `status`, `create_time`, `error`) VALUES ( ?,?,?,?,?,?)",
